@@ -29,30 +29,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Poetry
-        run: pipx install poetry
-
-      - uses: actions/setup-python@v5
+      - uses: ./.github/workflows/setup.yml
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: poetry
-
-      - name: Install system dependencies in Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-
-          # For documentation
-          sudo apt install graphviz
-
-          # Without this, PySide6 gives an ImportError
-          sudo apt install libegl1
-
-      - name: Install dependencies
-        run: |
-          poetry env use "${{ matrix.python-version }}"
-          poetry install
+          python-version: "3.11"
 
       - name: Run tests
         run: poetry run pytest --cov-report=xml
