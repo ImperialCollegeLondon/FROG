@@ -323,8 +323,7 @@ class ST10Controller(
 
         For a complete list of status codes and their meanings, consult the manual.
         """
-        # SC is formatted as a hexadecimal string
-        return int(self._request_value("SC"), 16)
+        return self._request_int("SC", 16)
 
     @property
     def is_moving(self) -> bool:
@@ -347,11 +346,7 @@ class ST10Controller(
             SerialTimeoutException: Timed out waiting for response from device
             ST10ControllerError: Malformed message received from device
         """
-        step = self._request_value("IP")
-        try:
-            return int(step)
-        except ValueError:
-            raise ST10ControllerError(f"Invalid value for step received: {step}")
+        return self._request_int("IP")
 
     @step.setter
     def step(self, step: int) -> None:
@@ -473,6 +468,25 @@ class ST10Controller(
             raise ST10ControllerError(f"Unexpected response when querying value {name}")
 
         return response[len(name) + 1 :]
+
+    def _request_int(self, name: str, base: int = 10) -> int:
+        """Request a named value from the device and interpret the result as an int.
+
+        Args:
+            name: Variable name
+            base: Base of integer (e.g. 16 for hexadecimal)
+
+        Raises:
+            SerialException: Error communicating with device
+            SerialTimeoutException: Timed out waiting for response from device
+            ST10ControllerError: Malformed message received from device
+            UnicodeEncodeError: Message to be sent is malformed
+        """
+        resp = self._request_value(name)
+        try:
+            return int(resp, base)
+        except ValueError:
+            raise ST10ControllerError(f"Non-integer response received ({resp})")
 
     def stop_moving(self) -> None:
         """Immediately stop moving the motor."""
