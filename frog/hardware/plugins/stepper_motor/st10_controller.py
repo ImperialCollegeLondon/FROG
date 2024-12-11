@@ -8,6 +8,7 @@ The specification is available online:
 """
 
 import logging
+from enum import IntFlag
 from queue import Queue
 
 from PySide6.QtCore import QThread, QTimer, Signal
@@ -20,6 +21,34 @@ from frog.hardware.serial_device import SerialDevice
 
 class ST10ControllerError(SerialException):
     """Indicates that an error has occurred with the ST10 controller."""
+
+
+class ST10AlarmCode(IntFlag):
+    """The set of possible alarm codes for the ST10 motor controller.
+
+    These values are taken from the manual. Note that the alarm code is a bit mask, so
+    several of these may be set at once (if you're especially unlucky!).
+    """
+
+    POSITION_LIMIT = 0x0001
+    CCW_LIMIT = 0x0002
+    CW_LIMIT = 0x0004
+    OVER_TEMP = 0x0008
+    INTERNAL_VOLTAGE = 0x0010
+    OVER_VOLTAGE = 0x0020
+    UNDER_VOLTAGE = 0x0040
+    OVER_CURRENT = 0x0080
+    OPEN_MOTOR_WINDING = 0x0100
+    BAD_ENCODER = 0x0200
+    COMM_ERROR = 0x0400
+    BAD_FLASH = 0x0800
+    NO_MOVE = 0x1000
+    BLANK_Q_SEGMENT = 0x4000
+
+    def __str__(self) -> str:
+        """Convert the set alarm code bits to a string."""
+        error_str = ", ".join(code.name for code in self)  # type: ignore[misc]
+        return f"Alarm code 0x{self:04X}: {error_str}"
 
 
 _SEND_STRING_MAGIC = "Z"
@@ -332,6 +361,12 @@ class ST10Controller(
         This is done by checking whether the status code has the moving bit set.
         """
         return self.status_code & 0x0010 == 0x0010
+
+    @property
+    def alarm_code(self) -> ST10AlarmCode | None:
+        """Get the current alarm code for the controller, if any."""
+        code = self._request_int("AL", 16)
+        return ST10AlarmCode(code) if code else None
 
     @property
     def step(self) -> int:
