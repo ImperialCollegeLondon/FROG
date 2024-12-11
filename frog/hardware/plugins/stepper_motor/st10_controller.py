@@ -254,10 +254,20 @@ class ST10Controller(
 
         # For future move end messages, use a different handler
         self._reader.async_read_completed.disconnect(self._on_initial_move_end)
-        self._reader.async_read_completed.connect(self.send_move_end_message)
+        self._reader.async_read_completed.connect(self._on_move_end)
 
         # Signal that this device is ready to be used
         self.signal_is_opened()
+
+    def _on_move_end(self) -> None:
+        """Signal whether move was successful or an error occurred."""
+        if alarm_code := self.alarm_code:
+            # A controller error occurred
+            self.send_error_message(ST10ControllerError(str(alarm_code)))
+            return
+
+        # Move was successful
+        self.send_move_end_message()
 
     def _check_device_id(self) -> None:
         """Check that the ID is the correct one for an ST10.
