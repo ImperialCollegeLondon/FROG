@@ -48,7 +48,7 @@ def test_init_raises(steps: int, raises: Any, subscribe_mock: MagicMock, qtbot) 
         [
             target,
             pytest.raises(ValueError)
-            if target < 0 or target > 27
+            if target < 0 or target >= 36
             else does_not_raise(),
         ]
         for target in range(-36, 2 * 36)
