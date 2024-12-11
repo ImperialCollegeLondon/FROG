@@ -131,7 +131,7 @@ def test_on_initial_move_end(dev: ST10Controller) -> None:
                     dev._on_initial_move_end
                 )
                 reader_mock.async_read_completed.connect.assert_called_once_with(
-                    dev.send_move_end_message
+                    dev._on_move_end
                 )
                 timer_mock.stop.assert_called_once_with()
                 signal_mock.assert_called_once_with()
