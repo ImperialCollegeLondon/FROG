@@ -9,6 +9,7 @@ import pytest
 from serial import SerialException, SerialTimeoutException
 
 from frog.hardware.plugins.stepper_motor.st10_controller import (
+    ST10AlarmCode,
     ST10Controller,
     ST10ControllerError,
     _SerialReader,
@@ -352,6 +353,27 @@ def test_is_moving(
     status_code_mock.return_value = status
     expected = status & 0x0010 != 0  # check moving bit is set
     assert dev.is_moving == expected
+
+
+@pytest.mark.parametrize(
+    "code,expected",
+    (
+        (0, None),
+        (0x0004, ST10AlarmCode.CW_LIMIT),
+        (0x0014, ST10AlarmCode.INTERNAL_VOLTAGE | ST10AlarmCode.CW_LIMIT),
+    ),
+)
+def test_alarm_code(
+    code: int,
+    expected: ST10AlarmCode | None,
+    dev: ST10Controller,
+) -> None:
+    """Test the alarm_code property."""
+    with patch.object(dev, "_request_int") as request_mock:
+        request_mock.return_value = code
+        ret = dev.alarm_code
+        request_mock.assert_called_once_with("AL", 16)
+        assert ret == expected
 
 
 @pytest.mark.parametrize(
