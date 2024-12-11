@@ -80,8 +80,8 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
         if isinstance(target, str):
             target = self.preset_angle(target)
 
-        if target < 0.0 or target > 270.0:
-            raise ValueError("Angle must be between 0° and 270°")
+        if target < 0.0 or target >= 360.0:
+            raise ValueError("Angle must be between 0° and 360°")
 
         self.step = round(self.steps_per_rotation * target / 360.0)
 
