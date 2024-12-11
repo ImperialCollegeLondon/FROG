@@ -88,3 +88,7 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
     def send_move_end_message(self) -> None:
         """Send a message containing the angle moved to, once move ends."""
         self.send_message("move.end", moved_to=self.angle)
+
+    def send_limit_switch_message(self) -> None:
+        """Send a message when a limit switch has been triggered."""
+        self.send_message("limit_switch")

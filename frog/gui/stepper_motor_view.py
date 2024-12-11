@@ -2,7 +2,14 @@
 
 from pubsub import pub
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QSpinBox
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QGridLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSpinBox,
+)
 
 from frog.config import ANGLE_PRESETS, STEPPER_MOTOR_TOPIC
 from frog.gui.device_panel import DevicePanel
@@ -54,6 +61,10 @@ class StepperMotorControl(DevicePanel):
             self._update_mirror_position_display,
             f"device.{STEPPER_MOTOR_TOPIC}.move.end",
         )
+        pub.subscribe(
+            self._on_limit_switch_triggered,
+            f"device.{STEPPER_MOTOR_TOPIC}.limit_switch",
+        )
 
     def _add_checkable_button(self, name: str) -> QPushButton:
         """Add a selectable button to button_group."""
@@ -85,3 +96,18 @@ class StepperMotorControl(DevicePanel):
         if preset := next((k for k, v in ANGLE_PRESETS.items() if v == moved_to), None):
             text += f" ({preset})"
         self.mirror_position_display.setText(text)
+
+    def _on_limit_switch_triggered(self) -> None:
+        """Show a warning dialog and update the GUI."""
+        self.mirror_position_display.setText(
+            "<font color=red>ERROR:<br>Limit switch</font>"
+        )
+
+        # Show warning
+        msg_box = QMessageBox(
+            QMessageBox.Icon.Critical,
+            "Limit switch triggered",
+            "The motor has reached a limit switch and stopped.",
+            QMessageBox.StandardButton.Ok,
+        )
+        msg_box.exec()

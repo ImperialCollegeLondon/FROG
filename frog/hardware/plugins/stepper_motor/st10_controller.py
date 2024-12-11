@@ -261,13 +261,38 @@ class ST10Controller(
 
     def _on_move_end(self) -> None:
         """Signal whether move was successful or an error occurred."""
-        if alarm_code := self.alarm_code:
-            # A controller error occurred
-            self.send_error_message(ST10ControllerError(str(alarm_code)))
+        alarm_code = self.alarm_code
+        if not alarm_code:
+            # Move was successful
+            self.send_move_end_message()
             return
 
-        # Move was successful
-        self.send_move_end_message()
+        if alarm_code & ~(ST10AlarmCode.CCW_LIMIT | ST10AlarmCode.CW_LIMIT):
+            # A controller error occurred and it wasn't just because we hit a limit
+            # switch
+            self._on_controller_error(alarm_code)
+        else:
+            # We've hit a limit switch
+            self._on_limit_switch_hit()
+
+    def _on_controller_error(self, alarm_code: ST10AlarmCode) -> None:
+        """Send an error message in response to an alarm code."""
+        self.send_error_message(ST10ControllerError(str(alarm_code)))
+
+    def _on_limit_switch_hit(self) -> None:
+        """Attempt to restart the motor and send a warning message."""
+        # !!!!!!!!!! DOESN'T SEEM TO WORK :-( !!!!!!!!!!!!!!
+        # Try to clear alarm flags
+        self._write_check("AR")
+
+        # Try to re-enable motor
+        self._write_check("ME")
+
+        # If alarm flags are still set, then something's broken
+        if alarm_code := self.alarm_code:
+            self.send_error_message(ST10ControllerError(str(alarm_code)))
+        else:
+            self.send_message("limit_switch")
 
     def _check_device_id(self) -> None:
         """Check that the ID is the correct one for an ST10.
