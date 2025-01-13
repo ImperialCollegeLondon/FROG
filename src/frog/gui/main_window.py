@@ -21,6 +21,7 @@ from frog.config import (
 from frog.gui.data_file_view import DataFileControl
 from frog.gui.docs_view import DocsViewer
 from frog.gui.hardware_set.hardware_sets_view import HardwareSetsControl
+from frog.gui.hardware_set.menu import HardwareSetsMenu
 from frog.gui.logs_view import LogLocationOpen, LogOpen
 from frog.gui.measure_script.script_view import ScriptControl
 from frog.gui.sensors_panel import SensorsPanel
@@ -41,6 +42,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}")
 
         set_uncaught_exception_handler(self)
+
+        hw_sets_menu = HardwareSetsMenu()
+        self.menuBar().addMenu(hw_sets_menu)
 
         open_log = LogOpen(self)
         open_log_location = LogLocationOpen(self)
