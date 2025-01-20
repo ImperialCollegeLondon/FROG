@@ -5,8 +5,9 @@ from __future__ import annotations
 import bisect
 import logging
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import resources
+from itertools import chain
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +86,7 @@ class HardwareSet:
     devices: frozenset[OpenDeviceArgs]
     file_path: Path
     built_in: bool
+    label: str = field(init=False, default="")
 
     def __lt__(self, other: HardwareSet) -> bool:
         """Used for sorting HardwareSets.
@@ -129,6 +131,22 @@ class HardwareSet:
         return cls(plain_data["name"], devices, file_path, built_in)
 
 
+@dataclass
+class LabelledHardwareSet:
+    """A hardware set along with a unique label.
+
+    The label is auto-generated, based on the name and whether the HardwareSet is built
+    in.
+    """
+
+    hw_set: HardwareSet
+    label: str = field(default="")
+
+    def __lt__(self, other: LabelledHardwareSet) -> bool:
+        """Compare based solely on hw_set."""
+        return self.hw_set < other.hw_set
+
+
 def _get_new_hardware_set_path(
     stem: str, output_dir: Path = HARDWARE_SET_USER_PATH
 ) -> Path:
@@ -167,7 +185,8 @@ def _add_hardware_set(hw_set: HardwareSet) -> None:
         new_hw_set = HardwareSet(hw_set.name, hw_set.devices, file_path, built_in=False)
 
         # Insert into store, keeping it sorted
-        bisect.insort(_hw_sets, new_hw_set)
+        bisect.insort(_hw_sets, LabelledHardwareSet(hw_set=new_hw_set))
+        _refresh_hardware_set_labels()
 
         # Signal that a new hardware set has been added
         pub.sendMessage("hardware_set.added", hw_set=new_hw_set)
@@ -190,10 +209,47 @@ def _remove_hardware_set(hw_set: HardwareSet) -> None:
     )
     if msgbox.exec() == QMessageBox.StandardButton.Yes:
         if QFile.moveToTrash(str(hw_set.file_path)):
-            _hw_sets.remove(hw_set)
+            for i, label_hw_set in enumerate(_hw_sets):
+                if label_hw_set.hw_set == hw_set:
+                    _hw_sets.pop(i)
+                    break
+
+            _refresh_hardware_set_labels()
             pub.sendMessage("hardware_set.removed")
         else:
             show_error_message(None, "Failed to delete hardware set", "Deletion failed")
+
+
+def _refresh_hardware_set_labels() -> None:
+    """Refresh the labels for hardware sets.
+
+    Note that they may change when hardware sets are added or removed, because a
+    trailing number is added for duplicates.
+    """
+    global _hw_sets
+    labels = set()
+
+    for label_hw_set in _hw_sets:
+        hw_set = label_hw_set.hw_set
+        name_root = hw_set.name
+        if hw_set.built_in:
+            name_root += " (built in)"
+
+        # No hardware set by that name already
+        if name_root not in labels:
+            label_hw_set.label = name_root
+            labels.add(label_hw_set.label)
+            continue
+
+        # If there is already a hardware set by that name, append a number
+        i = 2
+        while True:
+            name = f"{name_root} ({i})"
+            if name not in labels:
+                label_hw_set.label = name
+                labels.add(label_hw_set.label)
+                break
+            i += 1
 
 
 def _load_hardware_sets(dir: Path, built_in: bool) -> Iterable[HardwareSet]:
@@ -252,12 +308,18 @@ def _load_user_hardware_sets() -> Iterable[HardwareSet]:
 def _load_all_hardware_sets() -> None:
     """Load all known hardware sets from disk."""
     global _hw_sets
-    _hw_sets.extend(_load_builtin_hardware_sets())
-    _hw_sets.extend(_load_user_hardware_sets())
+    _hw_sets.extend(
+        map(
+            LabelledHardwareSet,
+            chain(_load_builtin_hardware_sets(), _load_user_hardware_sets()),
+        )
+    )
     _hw_sets.sort()
 
+    _refresh_hardware_set_labels()
 
-def get_hardware_sets() -> Iterable[HardwareSet]:
+
+def get_hardware_sets() -> Iterable[tuple[str, HardwareSet]]:
     """Get all hardware sets in the store, sorted.
 
     This function is a generator as we do not want to expose the underlying list, which
@@ -270,10 +332,10 @@ def get_hardware_sets() -> Iterable[HardwareSet]:
     if not _hw_sets:
         _load_all_hardware_sets()
 
-    yield from _hw_sets
+    return ((hw_set.label, hw_set.hw_set) for hw_set in _hw_sets)
 
 
-_hw_sets: list[HardwareSet] = []
+_hw_sets: list[LabelledHardwareSet] = []
 
 pub.subscribe(_add_hardware_set, "hardware_set.add")
 pub.subscribe(_remove_hardware_set, "hardware_set.remove")

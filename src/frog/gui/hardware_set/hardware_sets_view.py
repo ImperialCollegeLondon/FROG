@@ -52,7 +52,7 @@ def _get_last_selected_hardware_set() -> HardwareSet | None:
     try:
         return next(
             hw_set
-            for hw_set in get_hardware_sets()
+            for _, hw_set in get_hardware_sets()
             if str(hw_set.file_path) == last_selected_path
         )
     except StopIteration:

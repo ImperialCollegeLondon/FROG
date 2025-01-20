@@ -64,40 +64,52 @@ _HW_SET = HardwareSet(
 )
 
 
-@pytest.mark.parametrize(
-    "existing_hw_sets,hw_set_name,expected_name,built_in",
-    (
-        ((), _HW_SET.name, _HW_SET.name, False),
-        ((_HW_SET,), _HW_SET.name, f"{_HW_SET.name} (2)", False),
-        ((_HW_SET, _HW_SET), _HW_SET.name, f"{_HW_SET.name} (3)", False),
-        ((), _HW_SET.name, f"{_HW_SET.name} (built in)", True),
-        ((_HW_SET,), _HW_SET.name, f"{_HW_SET.name} (built in) (2)", True),
-        (
-            (_HW_SET, _HW_SET),
-            _HW_SET.name,
-            f"{_HW_SET.name} (built in) (3)",
-            True,
-        ),
-    ),
-)
+# @pytest.mark.parametrize(
+#     "existing_hw_sets,hw_set_name,expected_name,built_in",
+#     (
+#         ((), _HW_SET.name, _HW_SET.name, False),
+#         ((_HW_SET,), _HW_SET.name, f"{_HW_SET.name} (2)", False),
+#         ((_HW_SET, _HW_SET), _HW_SET.name, f"{_HW_SET.name} (3)", False),
+#         ((), _HW_SET.name, f"{_HW_SET.name} (built in)", True),
+#         ((_HW_SET,), _HW_SET.name, f"{_HW_SET.name} (built in) (2)", True),
+#         (
+#             (_HW_SET, _HW_SET),
+#             _HW_SET.name,
+#             f"{_HW_SET.name} (built in) (3)",
+#             True,
+#         ),
+#     ),
+# )
+# def test_add_hardware_set(
+#     existing_hw_sets: Sequence[HardwareSet],
+#     hw_set_name: str,
+#     expected_name: str,
+#     built_in: bool,
+#     combo: HardwareSetsComboBox,
+#     qtbot,
+# ) -> None:
+#     """Test the _add_hardware_set() method."""
+#     combo.clear()
+#     for hw_set in existing_hw_sets:
+#         hw_set = HardwareSet(hw_set.name, hw_set.devices, hw_set.file_path, built_in)
+#         combo._add_hardware_set(hw_set)
+
+#     with patch.object(combo, "addItem") as add_mock:
+#         hw_set = HardwareSet(hw_set_name, frozenset(), Path(), built_in)
+#         combo._add_hardware_set(hw_set)
+#         add_mock.assert_called_once_with(expected_name, hw_set)
+
+
 def test_add_hardware_set(
-    existing_hw_sets: Sequence[HardwareSet],
     hw_set_name: str,
-    expected_name: str,
     built_in: bool,
     combo: HardwareSetsComboBox,
     qtbot,
 ) -> None:
     """Test the _add_hardware_set() method."""
-    combo.clear()
-    for hw_set in existing_hw_sets:
-        hw_set = HardwareSet(hw_set.name, hw_set.devices, hw_set.file_path, built_in)
-        combo._add_hardware_set(hw_set)
-
     with patch.object(combo, "addItem") as add_mock:
-        hw_set = HardwareSet(hw_set_name, frozenset(), Path(), built_in)
-        combo._add_hardware_set(hw_set)
-        add_mock.assert_called_once_with(expected_name, hw_set)
+        combo._add_hardware_set("some label", _HW_SET)
+        add_mock.assert_called_once_with("some label", _HW_SET)
 
 
 def test_get_current_hardware_set(combo: HardwareSetsComboBox, qtbot) -> None:

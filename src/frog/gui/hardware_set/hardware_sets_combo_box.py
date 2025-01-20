@@ -24,29 +24,12 @@ class HardwareSetsComboBox(QComboBox):
     def _load_hardware_set_list(self) -> None:
         """Populate the combo box with hardware sets."""
         self.clear()
-        for hw_set in get_hardware_sets():
-            self._add_hardware_set(hw_set)
+        for label, hw_set in get_hardware_sets():
+            self._add_hardware_set(label, hw_set)
 
-    def _add_hardware_set(self, hw_set: HardwareSet) -> None:
+    def _add_hardware_set(self, label: str, hw_set: HardwareSet) -> None:
         """Add a new hardware set to the combo box."""
-        labels = {self.itemText(i) for i in range(self.count())}
-
-        name_root = hw_set.name
-        if hw_set.built_in:
-            name_root += " (built in)"
-
-        if name_root not in labels:
-            self.addItem(name_root, hw_set)
-            return
-
-        # If there is already a hardware set by that name, append a number
-        i = 2
-        while True:
-            name = f"{name_root} ({i})"
-            if name not in labels:
-                self.addItem(name, hw_set)
-                return
-            i += 1
+        self.addItem(label, hw_set)
 
     def _on_hardware_set_added(self, hw_set: HardwareSet) -> None:
         """Clear the combo box and refill it, then select hw_set.

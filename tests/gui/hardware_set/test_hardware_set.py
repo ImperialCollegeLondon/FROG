@@ -14,6 +14,7 @@ from frozendict import frozendict
 from pubsub import pub
 from PySide6.QtWidgets import QMessageBox
 
+from frog.gui.hardware_set.hardware_set import LabelledHardwareSet
 from frog.config import HARDWARE_SET_USER_PATH
 from frog.device_info import DeviceInstanceRef
 from frog.gui.hardware_set import hardware_set
@@ -347,11 +348,13 @@ def test_get_new_hardware_set_path_creates_dir(tmp_path: Path) -> None:
     assert output_dir.exists()
 
 
+@patch("frog.gui.hardware_set.hardware_set._refresh_hardware_set_labels")
 @patch("frog.gui.hardware_set.hardware_set._get_new_hardware_set_path")
 @patch("frog.gui.hardware_set.hardware_set.show_error_message")
 def test_add_hardware_set_success(
     error_message_mock: Mock,
     get_path_mock: Mock,
+    refresh_labels_mock: Mock,
     hw_sets: Sequence[HardwareSet],
     sendmsg_mock: MagicMock,
 ) -> None:
@@ -371,16 +374,23 @@ def test_add_hardware_set_success(
         get_path_mock.assert_called_once_with(in_path.stem)
         hw_set.save.assert_called_once_with(out_path)
         error_message_mock.assert_not_called()
-        assert hw_set_list == [
-            hw_set_new
-        ]  # NB: Should be sorted but we don't check this
+        refresh_labels_mock.assert_called_once_with()
+
+        # NB: hw_set_list should be sorted but we don't check this
+        assert len(hw_set_list) == 1
+        assert hw_set_list[0].hw_set == hw_set_new
+
         sendmsg_mock.assert_called_once_with("hardware_set.added", hw_set=hw_set_new)
 
 
+@patch("frog.gui.hardware_set.hardware_set._refresh_hardware_set_labels")
 @patch("frog.gui.hardware_set.hardware_set._get_new_hardware_set_path")
 @patch("frog.gui.hardware_set.hardware_set.show_error_message")
 def test_add_hardware_set_fail(
-    error_message_mock: Mock, get_path_mock: Mock, sendmsg_mock: MagicMock
+    error_message_mock: Mock,
+    get_path_mock: Mock,
+    refresh_labels_mock: Mock,
+    sendmsg_mock: MagicMock,
 ) -> None:
     """Test _add_hardware_set() when it fails."""
     in_path = Path("dir1/file.yaml")
@@ -396,6 +406,7 @@ def test_add_hardware_set_fail(
         hw_set.save.assert_called_once_with(out_path)
         error_message_mock.assert_called_once()
         sendmsg_mock.assert_not_called()
+        refresh_labels_mock.assert_not_called()
 
 
 @patch("frog.gui.hardware_set.hardware_set.QFile.moveToTrash")
@@ -413,10 +424,11 @@ def test_remove_hardware_set_success(
     msgbox_mock.return_value = msgbox
     trash_mock.return_value = True
 
-    hw_set_list = list(hw_sets)
+    hw_set_list = [LabelledHardwareSet(hw_set, hw_set.name) for hw_set in hw_sets]
     with patch("frog.gui.hardware_set.hardware_set._hw_sets", hw_set_list):
         _remove_hardware_set(hw_sets[0])
-        assert hw_set_list == [hw_sets[1]]
+        assert len(hw_set_list) == 1
+        assert hw_set_list[0].hw_set == hw_sets[1]
         trash_mock.assert_called_once_with(str(hw_sets[0].file_path))
         sendmsg_mock.assert_called_once_with("hardware_set.removed")
 
@@ -531,14 +543,16 @@ def test_builtin_hardware_sets_valid() -> None:
     list(_load_builtin_hardware_sets())
 
 
+@patch("frog.gui.hardware_set.hardware_set._refresh_hardware_set_labels")
 @patch("frog.gui.hardware_set.hardware_set._load_hardware_sets")
-def test_load_all_hardware_sets(load_mock: Mock) -> None:
+def test_load_all_hardware_sets(load_mock: Mock, refresh_labels_mock: Mock) -> None:
     """Test _load_all_hardware_sets()."""
     hw_set_list: list[int] = []
     with patch("frog.gui.hardware_set.hardware_set._hw_sets", hw_set_list):
-        load_mock.side_effect = ((1, 0), (3, 2))  # deliberately unsorted
+        load_mock.side_effect = (, (3, 2))  # deliberately unsorted
         _load_all_hardware_sets()
         assert hw_set_list == [0, 1, 2, 3]
+        refresh_labels_mock.assert_called_once_with()
 
 
 @patch("frog.gui.hardware_set.hardware_set._load_hardware_sets")
