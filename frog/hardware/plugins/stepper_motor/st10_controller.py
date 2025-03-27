@@ -301,7 +301,7 @@ class ST10Controller(
         self._init_error_timer.start()
 
         # Receive a notification when motor has finished moving
-        self._send_string(_SEND_STRING_MAGIC)
+        self._notify_on_stopped()
 
     def _relative_move(self, steps: int) -> None:
         """Move the stepper motor to the specified relative position.
@@ -367,6 +367,7 @@ class ST10Controller(
         """
         # "Feed to position"
         self._write_check(f"FP{step}")
+        self._notify_on_stopped()
 
     def _send_string(self, string: str) -> None:
         """Request that the device sends string when operations have completed.
@@ -476,3 +477,7 @@ class ST10Controller(
     def stop_moving(self) -> None:
         """Immediately stop moving the motor."""
         self._write_check("ST")
+
+    def _notify_on_stopped(self) -> None:
+        """Wait until the motor has stopped moving and send a message when done."""
+        self._send_string(_SEND_STRING_MAGIC)

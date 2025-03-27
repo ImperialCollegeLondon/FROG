@@ -377,8 +377,10 @@ def test_get_step(
 def test_set_step(dev: ST10Controller, step: int) -> None:
     """Test setting the step property."""
     with patch.object(dev, "_write_check") as write_mock:
-        dev.step = step
-        write_mock.assert_called_once_with(f"FP{step}")
+        with patch.object(dev, "_notify_on_stopped") as notify_mock:
+            dev.step = step
+            write_mock.assert_called_once_with(f"FP{step}")
+            notify_mock.assert_called_once_with()
 
 
 @pytest.mark.parametrize("string", ("a", "A", "Z", "hello"))
