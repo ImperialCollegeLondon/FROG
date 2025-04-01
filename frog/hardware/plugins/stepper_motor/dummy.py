@@ -81,5 +81,9 @@ class DummyStepperMotor(
     def _on_move_end(self) -> None:
         """Run when the timer signals that the move has finished."""
         self._step = self._new_step
+        angle = 360.0 * self._step / self._steps_per_rotation
+        if angle < 0 or angle > 270:
+            self.send_limit_switch_message()
+
         logging.info("Move finished")
         self.send_move_end_message()
