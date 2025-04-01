@@ -51,7 +51,7 @@ mkdocstrings = "^0.29.0"
 mkdocstrings-python = "^1.13.0"
 mkdocs-material = "^9.6.7"
 mkdocs-gen-files = "^0.5.0"
-mkdocs-literate-nav = "^0.6.1"
+mkdocs-literate-nav = "^0.6.2"
 mkdocs-section-index = "^0.3.9"
 
 [tool.ruff]
