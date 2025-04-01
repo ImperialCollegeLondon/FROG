@@ -341,20 +341,6 @@ class Device(AbstractDevice):
         """Get the DeviceInstanceRef corresponding to this device."""
         return DeviceInstanceRef(self._device_base_type_info.name, self.name)
 
-    def send_error_message(self, error: Exception) -> None:
-        """Send an error message for this device."""
-        # Write to log
-        traceback_str = "".join(traceback.format_exception(error))
-        logging.error(f"Error with device {self.topic}: {traceback_str}")
-
-        # Send pubsub message
-        instance = self.get_instance_ref()
-        pub.sendMessage(
-            f"device.error.{instance!s}",
-            instance=instance,
-            error=error,
-        )
-
     def pubsub_errors(self, func: Callable) -> Callable:
         """Catch exceptions and broadcast via pubsub.
 
@@ -447,3 +433,17 @@ class Device(AbstractDevice):
             **kwargs: Extra arguments to include with pubsub message
         """
         pub.sendMessage(f"{self.topic}.{topic_suffix}", **kwargs)
+
+    def send_error_message(self, error: Exception) -> None:
+        """Send an error message for this device."""
+        # Write to log
+        traceback_str = "".join(traceback.format_exception(error))
+        logging.error(f"Error with device {self.topic}: {traceback_str}")
+
+        # Send pubsub message
+        instance = self.get_instance_ref()
+        pub.sendMessage(
+            f"device.error.{instance!s}",
+            instance=instance,
+            error=error,
+        )
