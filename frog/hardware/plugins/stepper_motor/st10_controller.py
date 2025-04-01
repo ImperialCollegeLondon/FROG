@@ -215,6 +215,7 @@ class ST10Controller(
                 RuntimeError("Timed out waiting for motor to move")
             )
         )
+        self._reset_alarm = False
 
         # Check that we are connecting to an ST10
         self._check_device_id()
@@ -283,16 +284,18 @@ class ST10Controller(
         """Attempt to restart the motor and send a warning message."""
         # !!!!!!!!!! DOESN'T SEEM TO WORK :-( !!!!!!!!!!!!!!
         # Try to clear alarm flags
-        self._write_check("AR")
+        # self._write_check("AR")
 
         # Try to re-enable motor
         self._write_check("ME")
 
         # If alarm flags are still set, then something's broken
-        if alarm_code := self.alarm_code:
-            self.send_error_message(ST10ControllerError(str(alarm_code)))
-        else:
-            self.send_message("limit_switch")
+        # if alarm_code := self.alarm_code:
+        #     self.send_error_message(ST10ControllerError(str(alarm_code)))
+        # else:
+        self.send_message("limit_switch")
+
+        self._reset_alarm = True
 
     def _check_device_id(self) -> None:
         """Check that the ID is the correct one for an ST10.
@@ -432,6 +435,9 @@ class ST10Controller(
         """
         # "Feed to position"
         self._write_check(f"FP{step}")
+        if self._reset_alarm:
+            self._write_check("AX")
+            self._reset_alarm = False
         self._notify_on_stopped()
 
     def _send_string(self, string: str) -> None:
