@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
@@ -255,6 +256,7 @@ class HardwareSetsControl(QGroupBox):
             settings.setValue(f"device/params/{class_name}", dev_props.args.params)
 
         self._update_control_state()
+        pub.subscribe(self._on_device_warning, f"device.{instance!s}.warning")
 
     def _on_device_closed(self, instance: DeviceInstanceRef) -> None:
         """Remove instance from _connected devices and update GUI."""
@@ -266,6 +268,7 @@ class HardwareSetsControl(QGroupBox):
             pass
         else:
             self._update_control_state()
+            pub.unsubscribe(self._on_device_warning, f"device.{instance!s}.warning")
 
     def _on_device_error(
         self, instance: DeviceInstanceRef, error: BaseException
@@ -280,3 +283,19 @@ class HardwareSetsControl(QGroupBox):
             f"A fatal error has occurred with the {instance!s} device: {error!s}",
             title="Device error",
         )
+
+    def _on_device_warning(self, instance: DeviceInstanceRef, message: str) -> None:
+        """Show a warning message for a non-fatal device error.
+
+        Todo:
+            The name of the device isn't currently very human readable.
+        """
+        # Show popup box in GUI
+        msg_box = QMessageBox(
+            QMessageBox.Icon.Warning,
+            "Device warning",
+            f"Warning for device {instance!s}: {message}",
+            QMessageBox.StandardButton.Ok,
+            self,
+        )
+        msg_box.exec()

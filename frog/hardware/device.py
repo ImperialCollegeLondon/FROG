@@ -447,3 +447,15 @@ class Device(AbstractDevice):
             instance=instance,
             error=error,
         )
+
+    def send_warning_message(self, message: str, topic_suffix: str = "") -> None:
+        """Indicate that a non-fatal error has occurred."""
+        # Write to log
+        logging.warning(f"Warning for device {self.topic}: {message}")
+
+        # Send pubsub message
+        instance = self.get_instance_ref()
+        suffix = "warning"
+        if topic_suffix:
+            suffix += f".{topic_suffix}"
+        self.send_message(suffix, instance=instance, message=message)
