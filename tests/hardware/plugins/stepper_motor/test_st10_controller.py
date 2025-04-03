@@ -46,10 +46,13 @@ def dev(subscribe_mock: MagicMock, serial_mock: MagicMock) -> ST10Controller:
 
     # These functions should all be called, but patch them for now as we test this
     # elsewhere
-    with patch.object(ST10Controller, "_check_device_id"):
-        with patch.object(ST10Controller, "_home_and_reset"):
-            with patch.object(ST10Controller, "signal_is_opened"):
-                return ST10Controller(*_SERIAL_ARGS)
+    with (
+        patch.object(ST10Controller, "_check_device_id"),
+        patch.object(ST10Controller, "_disable_limit_switches"),
+        patch.object(ST10Controller, "_home_and_reset"),
+        patch.object(ST10Controller, "signal_is_opened"),
+    ):
+        return ST10Controller(*_SERIAL_ARGS)
 
 
 @patch(
@@ -58,18 +61,22 @@ def dev(subscribe_mock: MagicMock, serial_mock: MagicMock) -> ST10Controller:
 )
 def test_init(subscribe_mock: MagicMock, serial_mock: MagicMock) -> None:
     """Test __init__()."""
-    with patch.object(ST10Controller, "_check_device_id") as check_mock:
-        with patch.object(ST10Controller, "_home_and_reset") as home_mock:
-            # We assign to a variable so the destructor isn't invoked until after
-            # our checks
-            st10 = ST10Controller(*_SERIAL_ARGS)
-            r = cast(MagicMock, st10._reader)
-            r.async_read_completed.connect.assert_called_once_with(
-                st10._on_initial_move_end
-            )
-            r.read_error.connect.assert_called_once_with(st10.send_error_message)
-            check_mock.assert_called_once()
-            home_mock.assert_called_once()
+    with (
+        patch.object(ST10Controller, "_check_device_id") as check_mock,
+        patch.object(ST10Controller, "_disable_limit_switches") as limit_mock,
+        patch.object(ST10Controller, "_home_and_reset") as home_mock,
+    ):
+        # We assign to a variable so the destructor isn't invoked until after
+        # our checks
+        st10 = ST10Controller(*_SERIAL_ARGS)
+        r = cast(MagicMock, st10._reader)
+        r.async_read_completed.connect.assert_called_once_with(
+            st10._on_initial_move_end
+        )
+        r.read_error.connect.assert_called_once_with(st10.send_error_message)
+        check_mock.assert_called_once()
+        limit_mock.assert_called_once()
+        home_mock.assert_called_once()
 
 
 @patch("frog.hardware.plugins.stepper_motor.st10_controller.SerialDevice")
