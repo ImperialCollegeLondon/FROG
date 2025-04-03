@@ -138,6 +138,38 @@ def test_on_initial_move_end(dev: ST10Controller) -> None:
 
 
 @patch(
+    "frog.hardware.plugins.stepper_motor.st10_controller.ST10Controller.alarm_code",
+    new_callable=PropertyMock,
+    return_value=None,
+)
+def test_on_move_end_success(alarm_mock: Mock, dev: ST10Controller) -> None:
+    """Test the _on_move_end() method when no error has occurred."""
+    with (
+        patch.object(dev, "send_move_end_message") as success_mock,
+        patch.object(dev, "send_error_message") as fail_mock,
+    ):
+        dev._on_move_end()
+        success_mock.assert_called_once_with()
+        fail_mock.assert_not_called()
+
+
+@patch(
+    "frog.hardware.plugins.stepper_motor.st10_controller.ST10Controller.alarm_code",
+    new_callable=PropertyMock,
+    return_value=ST10AlarmCode.CW_LIMIT,
+)
+def test_on_move_end_fail(alarm_mock: Mock, dev: ST10Controller) -> None:
+    """Test the _on_move_end() method when an error has occurred."""
+    with (
+        patch.object(dev, "send_move_end_message") as success_mock,
+        patch.object(dev, "send_error_message") as fail_mock,
+    ):
+        dev._on_move_end()
+        success_mock.assert_not_called()
+        fail_mock.assert_called_once()
+
+
+@patch(
     "frog.hardware.plugins.stepper_motor.st10_controller.ST10Controller.angle",
     new_callable=PropertyMock,
 )
