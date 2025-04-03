@@ -264,10 +264,9 @@ class ST10Controller(
         if alarm_code := self.alarm_code:
             # A controller error occurred
             self.send_error_message(ST10ControllerError(str(alarm_code)))
-            return
-
-        # Move was successful
-        self.send_move_end_message()
+        else:
+            # Move was successful
+            self.send_move_end_message()
 
     def _check_device_id(self) -> None:
         """Check that the ID is the correct one for an ST10.
