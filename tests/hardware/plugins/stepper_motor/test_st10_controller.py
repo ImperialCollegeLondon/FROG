@@ -9,6 +9,7 @@ import pytest
 from serial import SerialException, SerialTimeoutException
 
 from frog.hardware.plugins.stepper_motor.st10_controller import (
+    ST10AlarmCode,
     ST10Controller,
     ST10ControllerError,
     _SerialReader,
@@ -130,10 +131,42 @@ def test_on_initial_move_end(dev: ST10Controller) -> None:
                     dev._on_initial_move_end
                 )
                 reader_mock.async_read_completed.connect.assert_called_once_with(
-                    dev.send_move_end_message
+                    dev._on_move_end
                 )
                 timer_mock.stop.assert_called_once_with()
                 signal_mock.assert_called_once_with()
+
+
+@patch(
+    "frog.hardware.plugins.stepper_motor.st10_controller.ST10Controller.alarm_code",
+    new_callable=PropertyMock,
+    return_value=None,
+)
+def test_on_move_end_success(alarm_mock: Mock, dev: ST10Controller) -> None:
+    """Test the _on_move_end() method when no error has occurred."""
+    with (
+        patch.object(dev, "send_move_end_message") as success_mock,
+        patch.object(dev, "send_error_message") as fail_mock,
+    ):
+        dev._on_move_end()
+        success_mock.assert_called_once_with()
+        fail_mock.assert_not_called()
+
+
+@patch(
+    "frog.hardware.plugins.stepper_motor.st10_controller.ST10Controller.alarm_code",
+    new_callable=PropertyMock,
+    return_value=ST10AlarmCode.CW_LIMIT,
+)
+def test_on_move_end_fail(alarm_mock: Mock, dev: ST10Controller) -> None:
+    """Test the _on_move_end() method when an error has occurred."""
+    with (
+        patch.object(dev, "send_move_end_message") as success_mock,
+        patch.object(dev, "send_error_message") as fail_mock,
+    ):
+        dev._on_move_end()
+        success_mock.assert_not_called()
+        fail_mock.assert_called_once()
 
 
 @patch(
@@ -256,6 +289,36 @@ def test_request_value(
             write_mock.assert_called_once_with(name)
 
 
+@pytest.mark.parametrize(
+    "response,base,expected",
+    (("10", None, 10), ("10", 10, 10), ("9", 10, 9), ("10", 16, 16), ("F", 16, 15)),
+)
+def test_request_int(
+    response: str, base: int | None, expected: int, dev: ST10Controller
+) -> None:
+    """Test the _request_int() method."""
+    with patch.object(dev, "_request_value") as request_mock:
+        request_mock.return_value = response
+
+        # This is so we can test that the default base is 10
+        kwargs = {}
+        if base:
+            kwargs["base"] = base
+
+        ret = dev._request_int("SOME_NAME", **kwargs)
+        assert ret == expected
+        request_mock.assert_called_once_with("SOME_NAME")
+
+
+def test_request_int_bad(dev: ST10Controller) -> None:
+    """Test the _request_int() method raises an error for non-integer return values."""
+    with (
+        patch.object(dev, "_request_value", return_value="a string"),
+        pytest.raises(ST10ControllerError),
+    ):
+        dev._request_int("SOME_NAME")
+
+
 def test_check_device_id(dev: ST10Controller) -> None:
     """Test the _check_device_id() method."""
     # Check with the correct ID
@@ -352,6 +415,27 @@ def test_is_moving(
     status_code_mock.return_value = status
     expected = status & 0x0010 != 0  # check moving bit is set
     assert dev.is_moving == expected
+
+
+@pytest.mark.parametrize(
+    "code,expected",
+    (
+        (0, None),
+        (0x0004, ST10AlarmCode.CW_LIMIT),
+        (0x0014, ST10AlarmCode.INTERNAL_VOLTAGE | ST10AlarmCode.CW_LIMIT),
+    ),
+)
+def test_alarm_code(
+    code: int,
+    expected: ST10AlarmCode | None,
+    dev: ST10Controller,
+) -> None:
+    """Test the alarm_code property."""
+    with patch.object(dev, "_request_int") as request_mock:
+        request_mock.return_value = code
+        ret = dev.alarm_code
+        request_mock.assert_called_once_with("AL", 16)
+        assert ret == expected
 
 
 @pytest.mark.parametrize(
