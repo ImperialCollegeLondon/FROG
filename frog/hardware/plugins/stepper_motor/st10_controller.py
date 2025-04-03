@@ -219,6 +219,8 @@ class ST10Controller(
         # Check that we are connecting to an ST10
         self._check_device_id()
 
+        self._disable_limit_switches()
+
         # Move mirror to home position
         self._home_and_reset()
 
@@ -280,6 +282,18 @@ class ST10Controller(
         self._write("MV")
         if self._read_sync() != self.ST10_MODEL_ID:
             raise ST10ControllerError("Device ID indicates this is not an ST10")
+
+    def _disable_limit_switches(self) -> None:
+        """Disable the limit switches on the controller.
+
+        Without this, we get an error if the motor hits a limit switch. The limit
+        switches aren't actually needed to protect anything in either the FINESSE or
+        UNIRAS rigs (the worst that will happen is the motor will just spin around), so
+        we don't need them.
+        """
+        # "Define limit". This command allows for setting the behaviour of the limit
+        # switches. The "3" option means that they are treated as normal inputs.
+        self._write_check("DL3")
 
     def _get_input_status(self, input: int) -> bool:
         """Read the status of the device's inputs.
