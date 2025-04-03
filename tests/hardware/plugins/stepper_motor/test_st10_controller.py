@@ -257,6 +257,36 @@ def test_request_value(
             write_mock.assert_called_once_with(name)
 
 
+@pytest.mark.parametrize(
+    "response,base,expected",
+    (("10", None, 10), ("10", 10, 10), ("9", 10, 9), ("10", 16, 16), ("F", 16, 15)),
+)
+def test_request_int(
+    response: str, base: int | None, expected: int, dev: ST10Controller
+) -> None:
+    """Test the _request_int() method."""
+    with patch.object(dev, "_request_value") as request_mock:
+        request_mock.return_value = response
+
+        # This is so we can test that the default base is 10
+        kwargs = {}
+        if base:
+            kwargs["base"] = base
+
+        ret = dev._request_int("SOME_NAME", **kwargs)
+        assert ret == expected
+        request_mock.assert_called_once_with("SOME_NAME")
+
+
+def test_request_int_bad(dev: ST10Controller) -> None:
+    """Test the _request_int() method raises an error for non-integer return values."""
+    with (
+        patch.object(dev, "_request_value", return_value="a string"),
+        pytest.raises(ST10ControllerError),
+    ):
+        dev._request_int("SOME_NAME")
+
+
 def test_check_device_id(dev: ST10Controller) -> None:
     """Test the _check_device_id() method."""
     # Check with the correct ID
