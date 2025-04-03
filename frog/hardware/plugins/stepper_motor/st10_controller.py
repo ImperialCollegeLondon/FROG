@@ -526,6 +526,9 @@ class ST10Controller(
             SerialTimeoutException: Timed out waiting for response from device
             ST10ControllerError: Malformed message received from device
             UnicodeEncodeError: Message to be sent is malformed
+
+        Returns:
+            int: The integer corresponding to the named value
         """
         resp = self._request_value(name)
         try:
