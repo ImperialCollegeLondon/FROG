@@ -81,7 +81,7 @@ class StepperMotorControl(DevicePanel):
 
         If angle corresponds to a preset, show the associated name as well as the value.
         """
-        text = f"{moved_to}°"
+        text = f"{round(moved_to)}°"
         if preset := next((k for k, v in ANGLE_PRESETS.items() if v == moved_to), None):
             text += f" ({preset})"
         self.mirror_position_display.setText(text)
