@@ -59,7 +59,7 @@ def test_request_command(command: str, opus: OPUSInterface, qtbot) -> None:
 def test_make_request(opus: OPUSInterface, filename: str, qtbot) -> None:
     """Test OPUSInterface's request_command() method."""
     with patch.object(opus, "_requester") as requester_mock:
-        opus._make_request(filename)
+        opus._make_opus_request(filename)
         requester_mock.make_request.assert_called_once_with(
             f"http://{DEFAULT_OPUS_HOST}:{DEFAULT_OPUS_PORT}/opusrs/{filename}", ANY
         )
