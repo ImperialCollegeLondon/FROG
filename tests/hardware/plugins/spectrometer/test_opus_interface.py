@@ -2,10 +2,9 @@
 
 from itertools import product
 from typing import Any
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from PySide6.QtNetwork import QNetworkReply
 
 from frog.config import DEFAULT_OPUS_HOST, DEFAULT_OPUS_PORT
 from frog.hardware.plugins.spectrometer.opus_interface import (
@@ -42,7 +41,7 @@ def test_init(timer_mock: Mock, subscribe_mock: Mock) -> None:
 
 def test_request_status(opus: OPUSInterface, qtbot) -> None:
     """Test OPUSInterface's _request_status() method."""
-    with patch.object(opus, "_make_request") as request_mock:
+    with patch.object(opus, "_make_opus_request") as request_mock:
         opus._request_status()
         request_mock.assert_called_once_with("stat.htm")
 
@@ -50,18 +49,18 @@ def test_request_status(opus: OPUSInterface, qtbot) -> None:
 @pytest.mark.parametrize("command", ("connect", "start", "stop", "cancel"))
 def test_request_command(command: str, opus: OPUSInterface, qtbot) -> None:
     """Test OPUSInterface's request_command() method."""
-    with patch.object(opus, "_make_request") as request_mock:
+    with patch.object(opus, "_make_opus_request") as request_mock:
         opus.request_command(command)
         request_mock.assert_called_once_with(f"cmd.htm?opusrs{command}")
 
 
 @pytest.mark.parametrize("filename", ("hello.htm", "hello.htm?somequery"))
-def test_make_request(opus: OPUSInterface, filename: str, qtbot) -> None:
-    """Test OPUSInterface's request_command() method."""
-    with patch.object(opus, "_requester") as requester_mock:
-        opus._make_request(filename)
-        requester_mock.make_request.assert_called_once_with(
-            f"http://{DEFAULT_OPUS_HOST}:{DEFAULT_OPUS_PORT}/opusrs/{filename}", ANY
+def test_make_opus_request(opus: OPUSInterface, filename: str, qtbot) -> None:
+    """Test OPUSInterface's _make_opus_request() method."""
+    with patch.object(opus, "make_request") as request_mock:
+        opus._make_opus_request(filename)
+        request_mock.assert_called_once_with(
+            f"http://{DEFAULT_OPUS_HOST}:{DEFAULT_OPUS_PORT}/opusrs/{filename}"
         )
 
 
@@ -144,63 +143,41 @@ def test_parse_response_bad_id(warning_mock: Mock) -> None:
 
 
 @patch("frog.hardware.plugins.spectrometer.opus_interface.parse_response")
-def test_on_reply_received_status_changed(
+def test_handle_response_status_changed(
     parse_response_mock: Mock, opus: OPUSInterface, qtbot
 ) -> None:
-    """Test the _on_reply_received() method works when no error occurs."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
-
+    """Test the handle_response() method."""
     assert opus._status != SpectrometerStatus.CONNECTED
     parse_response_mock.return_value = SpectrometerStatus.CONNECTED
 
     # Check the status update is sent
     with patch.object(opus, "send_status_message") as status_mock:
-        opus._on_reply_received(reply)
+        opus.handle_response(MagicMock())
         assert opus._status == SpectrometerStatus.CONNECTED
         status_mock.assert_called_once_with(SpectrometerStatus.CONNECTED)
 
 
 @patch("frog.hardware.plugins.spectrometer.opus_interface.parse_response")
-def test_on_reply_received_status_unchanged(
+def test_handle_response_status_unchanged(
     parse_response_mock: Mock, opus: OPUSInterface, qtbot
 ) -> None:
-    """Test the _on_reply_received() method only sends a status update if changed."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
-
+    """Test the handle_response() method only sends a status update if changed."""
     opus._status = SpectrometerStatus.CONNECTED
     parse_response_mock.return_value = SpectrometerStatus.CONNECTED
 
     # Check the status is send
     with patch.object(opus, "send_status_message") as status_mock:
-        opus._on_reply_received(reply)
+        opus.handle_response(MagicMock())
         status_mock.assert_not_called()
-
-
-@patch("frog.hardware.plugins.spectrometer.opus_interface.parse_response")
-def test_on_reply_received_network_error(
-    parse_response_mock: Mock, opus: OPUSInterface, qtbot
-) -> None:
-    """Test the _on_reply_received() method handles network errors."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.HostNotFoundError
-    reply.errorString.return_value = "Something went wrong"
-
-    with pytest.raises(OPUSError):
-        opus._on_reply_received(reply)
 
 
 @patch("frog.hardware.plugins.spectrometer.opus_interface.parse_response")
 def test_on_reply_received_exception(
     parse_response_mock: Mock, opus: OPUSInterface, qtbot
 ) -> None:
-    """Test that the _on_reply_received() method catches parsing errors."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
-
+    """Test that the handle_response() method catches parsing errors."""
     # Make parse_response() raise an exception
     parse_response_mock.side_effect = RuntimeError
 
     with pytest.raises(RuntimeError):
-        opus._on_reply_received(reply)
+        opus.handle_response(MagicMock())
