@@ -1,5 +1,6 @@
 """Provides a device which communicates via HTTP requests."""
 
+import logging
 from abc import abstractmethod
 from collections.abc import Callable
 from functools import partial
@@ -19,7 +20,7 @@ class HTTPDevice(
 ):
     """A device which communicates via HTTP requests."""
 
-    def __init__(self, timeout: float, default_retries: int) -> None:
+    def __init__(self, timeout: float, default_retries: int = 0) -> None:
         """Create a new HTTPDevice.
 
         Args:
@@ -85,6 +86,10 @@ class HTTPDevice(
                 raise RuntimeError(f"Network error: {reply.errorString()}")
 
             # ...otherwise, try again
+            logging.warning(
+                f"Request failed (remaining retries: {retries_remaining}): "
+                + reply.errorString()
+            )
             self.make_request(url, callback, retries_remaining - 1)
             return
 
