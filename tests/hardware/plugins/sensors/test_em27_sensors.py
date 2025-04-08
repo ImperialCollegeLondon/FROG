@@ -5,7 +5,6 @@ from importlib import resources
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from PySide6.QtNetwork import QNetworkReply
 
 from frog.config import EM27_SENSORS_URL
 from frog.hardware.plugins.sensors.em27_sensors import (
@@ -45,45 +44,29 @@ def test_init() -> None:
 
 
 @patch("frog.hardware.plugins.sensors.em27_sensors.get_em27_sensor_data")
-def test_on_reply_received_no_error(
+def test_handle_response(
     get_em27_sensor_data_mock: Mock, em27_sensors: EM27Sensors, qtbot
 ) -> None:
     """Test the _on_reply_received() method works when no error occurs."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
-
     # NB: This value is of the wrong type, but it doesn't matter here
     get_em27_sensor_data_mock.return_value = "sensor readings"
 
     with patch.object(em27_sensors, "send_readings_message") as send_mock:
-        em27_sensors._on_reply_received(reply)
+        em27_sensors.handle_response(MagicMock())
         send_mock.assert_called_once_with("sensor readings")
 
 
-def test_on_reply_received_network_error(em27_sensors: EM27Sensors, qtbot) -> None:
-    """Test the _on_reply_received() method works when a network error occurs."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.HostNotFoundError
-    reply.errorString.return_value = "Host not found"
-
-    with pytest.raises(EM27Error):
-        em27_sensors._on_reply_received(reply)
-
-
 @patch("frog.hardware.plugins.sensors.em27_sensors.get_em27_sensor_data")
-def test_on_reply_received_exception(
+def test_handle_response_exception(
     get_em27_sensor_data_mock: Mock, em27_sensors: EM27Sensors, qtbot
 ) -> None:
-    """Test the _on_reply_received() method works when an exception is raised."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
-
+    """Test the handle_response() method works when an exception is raised."""
     # Make get_em27_sensor_data() raise an exception
     error = Exception()
     get_em27_sensor_data_mock.side_effect = error
 
     with pytest.raises(Exception):
-        em27_sensors._on_reply_received(reply)
+        em27_sensors.handle_response(MagicMock())
 
 
 def test_get_em27_sensor_data() -> None:

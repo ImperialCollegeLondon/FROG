@@ -10,14 +10,14 @@ import logging
 
 from bs4 import BeautifulSoup
 from PySide6.QtCore import QTimer
-from PySide6.QtNetwork import QNetworkReply
 
 from frog.config import (
+    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_OPUS_HOST,
     DEFAULT_OPUS_POLLING_INTERVAL,
     DEFAULT_OPUS_PORT,
 )
-from frog.hardware.http_requester import HTTPRequester
+from frog.hardware.http_device import HTTPDevice
 from frog.hardware.plugins.spectrometer.opus_interface_base import (
     OPUSError,
     OPUSInterfaceBase,
@@ -61,6 +61,7 @@ def parse_response(response: str) -> SpectrometerStatus:
 
 
 class OPUSInterface(
+    HTTPDevice,
     OPUSInterfaceBase,
     description="OPUS spectrometer",
     parameters={
@@ -83,6 +84,7 @@ class OPUSInterface(
         host: str = DEFAULT_OPUS_HOST,
         port: int = DEFAULT_OPUS_PORT,
         polling_interval: float = DEFAULT_OPUS_POLLING_INTERVAL,
+        timeout: float = DEFAULT_HTTP_TIMEOUT,
     ) -> None:
         """Create a new OPUSInterface.
 
@@ -90,9 +92,11 @@ class OPUSInterface(
             host: The hostname or IP address on which to make requests
             port: The port on which to make requests
             polling_interval: Minimum polling interval for status
+            timeout: The maximum time in seconds to wait for a response from the server
         """
-        super().__init__()
-        self._requester = HTTPRequester()
+        HTTPDevice.__init__(self, timeout)
+        OPUSInterfaceBase.__init__(self)
+
         self._url = f"http://{host}:{port}/opusrs"
         """URL to make requests."""
 
@@ -110,14 +114,8 @@ class OPUSInterface(
         self._status_timer.stop()
         super().close()
 
-    def _on_reply_received(self, reply: QNetworkReply) -> None:
-        """Handle received HTTP reply."""
-        if reply.error() != QNetworkReply.NetworkError.NoError:
-            raise OPUSError(f"Network error: {reply.errorString()}")
-
-        # Parse the received message
-        data: bytes = reply.readAll().data()
-        response = data.decode()
+    def handle_response(self, response: str):
+        """Process HTTP response from OPUS."""
         new_status = parse_response(response)
 
         # If the status has changed, notify listeners
@@ -132,15 +130,13 @@ class OPUSInterface(
         # Poll the status again after a delay
         self._status_timer.start()
 
-    def _make_request(self, filename: str) -> None:
+    def _make_opus_request(self, filename: str) -> None:
         """Make an HTTP request in the background."""
-        self._requester.make_request(
-            f"{self._url}/{filename}", self.pubsub_errors(self._on_reply_received)
-        )
+        self.make_request(f"{self._url}/{filename}")
 
     def _request_status(self) -> None:
         """Request the current status from OPUS."""
-        self._make_request(STATUS_FILENAME)
+        self._make_opus_request(STATUS_FILENAME)
 
     def request_command(self, command: str) -> None:
         """Request that OPUS run the specified command.
@@ -148,4 +144,4 @@ class OPUSInterface(
         Args:
             command: Name of command to run
         """
-        self._make_request(f"{COMMAND_FILENAME}?opusrs{command}")
+        self._make_opus_request(f"{COMMAND_FILENAME}?opusrs{command}")

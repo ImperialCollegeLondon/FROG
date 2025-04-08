@@ -14,15 +14,15 @@ from functools import partial
 from typing import Any
 
 from PySide6.QtCore import QUrlQuery
-from PySide6.QtNetwork import QNetworkReply
 
 from frog.config import (
     DECADES_HOST,
     DECADES_POLL_INTERVAL,
     DECADES_URL,
     DEFAULT_DECADES_PARAMETERS,
+    DEFAULT_HTTP_TIMEOUT,
 )
-from frog.hardware.http_requester import HTTPRequester
+from frog.hardware.http_device import HTTPDevice
 from frog.hardware.plugins.sensors.sensors_base import SensorsBase
 from frog.sensor_reading import SensorReading
 
@@ -86,6 +86,7 @@ class DecadesParameter:
 
 
 class Decades(
+    HTTPDevice,
     SensorsBase,
     description="DECADES sensors",
     parameters={
@@ -105,6 +106,7 @@ class Decades(
         host: str = DECADES_HOST,
         poll_interval: float = DECADES_POLL_INTERVAL,
         params: str = ",".join(DEFAULT_DECADES_PARAMETERS),
+        timeout: float = DEFAULT_HTTP_TIMEOUT,
     ) -> None:
         """Create a new Decades instance.
 
@@ -113,13 +115,14 @@ class Decades(
             poll_interval: How often to poll the sensors (seconds)
             params: Comma-separated list of parameters to request from the DECADES
                     server (leave empty for all)
+            timeout: The maximum time in seconds to wait for a response from the server
         """
         self._url: str = DECADES_URL.format(host=host)
-        self._requester = HTTPRequester()
         self._params: list[DecadesParameter]
         """Parameters returned by the server."""
 
-        super().__init__(poll_interval)
+        HTTPDevice.__init__(self, timeout)
+        SensorsBase.__init__(self, poll_interval)
 
         # Obtain full parameter list in order to parse received data
         self.obtain_parameter_list(
@@ -128,9 +131,9 @@ class Decades(
 
     def obtain_parameter_list(self, params: Set[str]) -> None:
         """Request the parameter list from the DECADES server and wait for response."""
-        self._requester.make_request(
+        self.make_request(
             self._url + "/params/availability",
-            partial(self.pubsub_errors(self._on_params_received), params=params),
+            partial(self._on_params_received, params=params),
         )
 
     def request_readings(self) -> None:
@@ -145,9 +148,7 @@ class Decades(
         for param in self._params:
             url.addQueryItem("para", param.name)
 
-        self._requester.make_request(
-            url.toString(), self.pubsub_errors(self._on_reply_received)
-        )
+        self.make_request(url.toString())
 
     def _get_decades_data(self, content: dict[str, list]) -> Iterable[SensorReading]:
         """Parse and return sensor data from a DECADES server query.
@@ -167,31 +168,24 @@ class Decades(
                     f"DECADES: Server did not return data for parameter {param.name}"
                 )
 
-    def _on_reply_received(self, reply: QNetworkReply) -> None:
-        """Handle received HTTP reply.
+    def handle_response(self, response: str) -> None:
+        """Process received sensor readings.
 
         Args:
-            reply: the response from the server
+            response: The response from the server
         """
-        if reply.error() != QNetworkReply.NetworkError.NoError:
-            raise DecadesError(f"Error: {reply.errorString()}")
-        data: bytes = reply.readAll().data()
-        content = json.loads(data.decode())
+        content = json.loads(response)
         readings = tuple(self._get_decades_data(content))
         self.send_readings_message(readings)
 
-    def _on_params_received(self, reply: QNetworkReply, params: Set[str]) -> None:
-        """Handle received HTTP reply.
+    def _on_params_received(self, response: str, params: Set[str]) -> None:
+        """Processed received parameter list.
 
         Args:
-            reply: The response from the server
+            response: The response from the server
             params: Which parameters to request from the server
         """
-        if reply.error() != QNetworkReply.NetworkError.NoError:
-            raise DecadesError(f"Error: {reply.errorString()}")
-
-        data: bytes = reply.readAll().data()
-        all_params_info: list[dict[str, Any]] = json.loads(data.decode())
+        all_params_info: list[dict[str, Any]] = json.loads(response)
 
         if not params:
             # User wants all params
