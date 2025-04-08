@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import traceback
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from copy import deepcopy
 from enum import Enum
 from inspect import isabstract, signature
@@ -98,19 +98,24 @@ class AbstractDevice(ABC):
             cls._device_async_open = async_open
 
     @classmethod
+    def _get_parent_device_parameters(cls) -> Iterable[tuple[str, DeviceParameter]]:
+        """Get device parameters for parent classes."""
+        for t in cls.__mro__[1:]:
+            if params := getattr(t, "_device_parameters", None):
+                yield from params.items()
+
+    @classmethod
     def _add_parameters(
-        cls,
-        parameters: Mapping[str, str | tuple[str, Sequence]],
+        cls, parameters: Mapping[str, str | tuple[str, Sequence]]
     ) -> None:
         """Store extra device parameters in a class attribute."""
         arg_types = get_type_hints(cls.__init__)
+        parent_params = dict(cls._get_parent_device_parameters())
 
         # We want to copy device parameters from the parent class, but only if they are
         # also present in this class's constructor
         cls._device_parameters = {
-            k: deepcopy(v)
-            for k, v in cls._device_parameters.items()
-            if k in arg_types.keys()
+            k: deepcopy(v) for k, v in parent_params.items() if k in arg_types
         }
 
         for name, value in parameters.items():
