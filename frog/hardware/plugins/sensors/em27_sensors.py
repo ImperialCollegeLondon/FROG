@@ -5,11 +5,14 @@ This is used to scrape the PSF27Sensor data table off the server.
 
 from decimal import Decimal
 
-from PySide6.QtNetwork import QNetworkReply
-
-from frog.config import EM27_HOST, EM27_SENSORS_POLL_INTERVAL, EM27_SENSORS_URL
+from frog.config import (
+    DEFAULT_HTTP_TIMEOUT,
+    EM27_HOST,
+    EM27_SENSORS_POLL_INTERVAL,
+    EM27_SENSORS_URL,
+)
 from frog.hardware.device import DeviceClassType
-from frog.hardware.http_requester import HTTPRequester
+from frog.hardware.http_device import HTTPDevice
 from frog.hardware.plugins.sensors.sensors_base import SensorsBase
 from frog.sensor_reading import SensorReading
 
@@ -51,24 +54,31 @@ class EM27Error(Exception):
 
 
 class EM27SensorsBase(
+    HTTPDevice,
     SensorsBase,
     class_type=DeviceClassType.IGNORE,
     async_open=True,
 ):
     """An interface for monitoring EM27 properties."""
 
-    def __init__(self, url: str, poll_interval: float = float("nan")) -> None:
+    def __init__(
+        self,
+        url: str,
+        poll_interval: float = float("nan"),
+        timeout: float = DEFAULT_HTTP_TIMEOUT,
+    ) -> None:
         """Create a new EM27 property monitor.
 
         Args:
             url: Web address of the automation units diagnostics page.
             poll_interval: How often to poll the device (seconds)
+            timeout: The maximum time in seconds to wait for a response from the server
         """
         self._url: str = url
-        self._requester = HTTPRequester()
         self._connected = False
 
-        super().__init__(poll_interval)
+        HTTPDevice.__init__(self, timeout)
+        SensorsBase.__init__(self, poll_interval)
 
         self.request_readings()
 
@@ -77,23 +87,11 @@ class EM27SensorsBase(
 
         The HTTP request is made on a background thread.
         """
-        self._requester.make_request(
-            self._url,
-            self.pubsub_errors(self._on_reply_received),
-        )
+        self.make_request(self._url)
 
-    def _on_reply_received(self, reply: QNetworkReply) -> None:
-        """Handle received HTTP reply.
-
-        Args:
-            reply: the response from the server
-        """
-        if reply.error() != QNetworkReply.NetworkError.NoError:
-            raise EM27Error(f"Network error: {reply.errorString()}")
-
-        data: bytes = reply.readAll().data()
-        content = data.decode()
-        readings = get_em27_sensor_data(content)
+    def handle_response(self, response: str):
+        """Process received sensor data."""
+        readings = get_em27_sensor_data(response)
 
         if not self._connected:
             self._connected = True
@@ -111,12 +109,16 @@ class EM27Sensors(
     """An interface for EM27 sensors on the real device."""
 
     def __init__(
-        self, host: str = EM27_HOST, poll_interval: float = EM27_SENSORS_POLL_INTERVAL
+        self,
+        host: str = EM27_HOST,
+        poll_interval: float = EM27_SENSORS_POLL_INTERVAL,
+        timeout: float = DEFAULT_HTTP_TIMEOUT,
     ) -> None:
         """Create a new EM27Sensors.
 
         Args:
             host: The IP address or hostname of the EM27 device
             poll_interval: How often to poll the sensors (seconds)
+            timeout: The maximum time in seconds to wait for a response from the server
         """
-        super().__init__(EM27_SENSORS_URL.format(host=host), poll_interval)
+        super().__init__(EM27_SENSORS_URL.format(host=host), poll_interval, timeout)

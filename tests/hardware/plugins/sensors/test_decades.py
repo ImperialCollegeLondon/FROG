@@ -7,12 +7,10 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from freezegun import freeze_time
-from PySide6.QtNetwork import QNetworkReply
 
 from frog.config import DECADES_URL
 from frog.hardware.plugins.sensors.decades import (
     Decades,
-    DecadesError,
     DecadesParameter,
     _get_selected_params,
 )
@@ -20,8 +18,8 @@ from frog.sensor_reading import SensorReading
 
 
 @pytest.fixture
-@patch("frog.hardware.plugins.sensors.decades.HTTPRequester")
-def decades(requester_mock, qtbot, subscribe_mock) -> Decades:
+@patch("frog.hardware.plugins.sensors.decades.Decades.make_request")
+def decades(request_mock, qtbot, subscribe_mock) -> Decades:
     """Fixture for Decades."""
     return Decades()
 
@@ -41,71 +39,40 @@ PARAMS = [DecadesParameter("a", "A", "m"), DecadesParameter("b", "B", "J")]
 
 @patch("json.loads")
 @patch("frog.hardware.plugins.sensors.decades.Decades._get_decades_data")
-def test_on_reply_received_no_error(
+def test_handle_response(
     get_decades_data_mock: Mock, json_loads_mock: Mock, decades: Decades
 ) -> None:
-    """Test the _on_reply_received() method works when no error occurs."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
+    """Test the handle_response() method processes sensor readings correctly."""
+    response = "RESPONSE"
     get_decades_data_mock.return_value = range(3)
 
     # Check send_readings_message() is called
     with patch.object(decades, "send_readings_message") as send_readings_mock:
-        decades._on_reply_received(reply)
+        decades.handle_response(response)
         send_readings_mock.assert_called_once_with((0, 1, 2))
-        json_loads_mock.assert_called_once_with(reply.readAll().data().decode())
-
-
-def test_on_reply_received_network_error(decades: Decades) -> None:
-    """Tests the _on_reply_received() method works when a network error occurs."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.HostNotFoundError
-    reply.errorString.return_value = "Host not found"
-
-    with pytest.raises(DecadesError):
-        decades._on_reply_received(reply)
-
-
-@patch("json.loads")
-@patch("frog.hardware.plugins.sensors.decades.Decades._get_decades_data")
-def test_on_reply_received_exception(
-    get_decades_data_mock: Mock, json_loads_mock: Mock, decades: Decades
-) -> None:
-    """Tests the _on_reply_received() method works when an exception is raised."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
-
-    # Make get_decades_data() raise an exception
-    error = Exception()
-    get_decades_data_mock.side_effect = error
-
-    with pytest.raises(Exception):
-        decades._on_reply_received(reply)
+        json_loads_mock.assert_called_once_with(response)
 
 
 def test_obtain_parameter_list(decades: Decades) -> None:
     """Tests the obtain_parameter_list() method."""
-    with patch.object(decades, "_requester") as requester_mock:
-        with patch.object(decades, "pubsub_errors") as wrapper_mock:
-            with patch.object(decades, "_on_params_received") as params_received_mock:
-                wrapper_mock.return_value = decades._on_params_received
-                params = MagicMock()
-                decades.obtain_parameter_list(params)
-                wrapper_mock.assert_called_once_with(decades._on_params_received)
-                requester_mock.make_request.assert_called_once()
+    with (
+        patch.object(decades, "make_request") as make_request_mock,
+        patch.object(decades, "_on_params_received") as params_received_mock,
+    ):
+        params = MagicMock()
+        decades.obtain_parameter_list(params)
+        make_request_mock.assert_called_once()
 
-                params_received_mock.assert_not_called()
-                reply = MagicMock()
-                requester_mock.make_request.call_args.args[1](reply)
-                params_received_mock.assert_called_once_with(reply, params=params)
+        params_received_mock.assert_not_called()
+        reply = MagicMock()
+        make_request_mock.call_args.args[1](reply)
+        params_received_mock.assert_called_once_with(reply, params=params)
 
 
 @pytest.mark.parametrize("params", (set(), set("ab")))
-def test_on_params_received_no_error(params: set[str], decades: Decades) -> None:
+def test_on_params_received(params: set[str], decades: Decades) -> None:
     """Test the _on_params_received() method."""
     assert not hasattr(decades, "_params")
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.NoError
     all_params_info = (
         {
             "ParameterName": "a",
@@ -126,35 +93,22 @@ def test_on_params_received_no_error(params: set[str], decades: Decades) -> None
             "available": False,
         },
     )
-    reply.readAll().data.return_value = json.dumps(all_params_info).encode()
+    response = json.dumps(all_params_info)
 
     with patch.object(decades, "start_polling") as start_mock:
-        decades._on_params_received(reply, params)
+        decades._on_params_received(response, params)
         assert decades._params == [p for p in PARAMS if not params or p.name in params]
         start_mock.assert_called_once_with()
-
-
-def test_on_params_received_network_error(decades: Decades) -> None:
-    """Test the _on_params_received() method when a network error occurs."""
-    reply = MagicMock()
-    reply.error.return_value = QNetworkReply.NetworkError.HostNotFoundError
-    reply.errorString.return_value = "Host not found"
-
-    with pytest.raises(DecadesError):
-        decades._on_params_received(reply, set("ab"))
 
 
 @freeze_time("1970-01-01 00:01:00")
 def test_request_readings(decades: Decades) -> None:
     """Tests the request_readings() method."""
     decades._params = PARAMS
-    with patch.object(decades, "_requester") as requester_mock:
-        with patch.object(decades, "pubsub_errors") as wrapper_mock:
-            wrapper_mock.return_value = "WRAPPED_FUNC"
-            decades.request_readings()
-            wrapper_mock.assert_called_once_with(decades._on_reply_received)
-            query = decades._url + "/livedata?&frm=60&to=60&para=a&para=b"
-            requester_mock.make_request.assert_called_once_with(query, "WRAPPED_FUNC")
+    with patch.object(decades, "make_request") as make_request_mock:
+        decades.request_readings()
+        query = decades._url + "/livedata?&frm=60&to=60&para=a&para=b"
+        make_request_mock.assert_called_once_with(query)
 
 
 @patch("frog.hardware.plugins.sensors.decades.logging.warn")

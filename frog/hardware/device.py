@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import traceback
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from copy import deepcopy
 from enum import Enum
 from inspect import isabstract, signature
@@ -98,19 +98,24 @@ class AbstractDevice(ABC):
             cls._device_async_open = async_open
 
     @classmethod
+    def _get_parent_device_parameters(cls) -> Iterable[tuple[str, DeviceParameter]]:
+        """Get device parameters for parent classes."""
+        for t in cls.__mro__[1:]:
+            if params := getattr(t, "_device_parameters", None):
+                yield from params.items()
+
+    @classmethod
     def _add_parameters(
-        cls,
-        parameters: Mapping[str, str | tuple[str, Sequence]],
+        cls, parameters: Mapping[str, str | tuple[str, Sequence]]
     ) -> None:
         """Store extra device parameters in a class attribute."""
         arg_types = get_type_hints(cls.__init__)
+        parent_params = dict(cls._get_parent_device_parameters())
 
         # We want to copy device parameters from the parent class, but only if they are
         # also present in this class's constructor
         cls._device_parameters = {
-            k: deepcopy(v)
-            for k, v in cls._device_parameters.items()
-            if k in arg_types.keys()
+            k: deepcopy(v) for k, v in parent_params.items() if k in arg_types
         }
 
         for name, value in parameters.items():
@@ -174,6 +179,57 @@ class AbstractDevice(ABC):
             cls._device_description,
             cls.get_device_parameters(),
         )
+
+    def pubsub_errors(self, func: Callable) -> Callable:
+        """Catch exceptions and broadcast via pubsub.
+
+        Args:
+            func: The function to wrap
+        """
+
+        def wrapped(func, *args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except Exception as error:
+                self.send_error_message(error)
+
+        return decorate(func, wrapped)
+
+    def pubsub_broadcast(
+        self, func: Callable, success_topic_suffix: str, *kwarg_names: str
+    ) -> Callable:
+        """Broadcast success or failure of function via pubsub.
+
+        If the function returns without error, the returned values are sent as arguments
+        to the success_topic message.
+
+        Args:
+            func: The function to wrap
+            success_topic_suffix: The topic name on which to broadcast function results
+            kwarg_names: The names of each of the returned values
+        """
+
+        def wrapped(func, *args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+            except Exception as error:
+                self.send_error_message(error)
+            else:
+                # Convert result to a tuple of the right size
+                if result is None:
+                    result = ()
+                elif not isinstance(result, tuple):
+                    result = (result,)
+
+                # Make sure we have the right number of return values
+                assert len(result) == len(kwarg_names)
+
+                # Send message with arguments
+                self.send_message(
+                    success_topic_suffix, **dict(zip(kwarg_names, result))
+                )
+
+        return decorate(func, wrapped)
 
 
 class DeviceClassType(Enum):
@@ -341,71 +397,6 @@ class Device(AbstractDevice):
         """Get the DeviceInstanceRef corresponding to this device."""
         return DeviceInstanceRef(self._device_base_type_info.name, self.name)
 
-    def send_error_message(self, error: Exception) -> None:
-        """Send an error message for this device."""
-        # Write to log
-        traceback_str = "".join(traceback.format_exception(error))
-        logging.error(f"Error with device {self.topic}: {traceback_str}")
-
-        # Send pubsub message
-        instance = self.get_instance_ref()
-        pub.sendMessage(
-            f"device.error.{instance!s}",
-            instance=instance,
-            error=error,
-        )
-
-    def pubsub_errors(self, func: Callable) -> Callable:
-        """Catch exceptions and broadcast via pubsub.
-
-        Args:
-            func: The function to wrap
-        """
-
-        def wrapped(func, *args, **kwargs):
-            try:
-                func(*args, **kwargs)
-            except Exception as error:
-                self.send_error_message(error)
-
-        return decorate(func, wrapped)
-
-    def pubsub_broadcast(
-        self, func: Callable, success_topic_suffix: str, *kwarg_names: str
-    ) -> Callable:
-        """Broadcast success or failure of function via pubsub.
-
-        If the function returns without error, the returned values are sent as arguments
-        to the success_topic message.
-
-        Args:
-            func: The function to wrap
-            success_topic_suffix: The topic name on which to broadcast function results
-            kwarg_names: The names of each of the returned values
-        """
-
-        def wrapped(func, *args, **kwargs):
-            try:
-                result = func(*args, **kwargs)
-            except Exception as error:
-                self.send_error_message(error)
-            else:
-                # Convert result to a tuple of the right size
-                if result is None:
-                    result = ()
-                elif not isinstance(result, tuple):
-                    result = (result,)
-
-                # Make sure we have the right number of return values
-                assert len(result) == len(kwarg_names)
-
-                # Send message with arguments
-                self.send_message(
-                    success_topic_suffix, **dict(zip(kwarg_names, result))
-                )
-
-        return decorate(func, wrapped)
-
     def subscribe(
         self,
         func: Callable,
@@ -447,3 +438,17 @@ class Device(AbstractDevice):
             **kwargs: Extra arguments to include with pubsub message
         """
         pub.sendMessage(f"{self.topic}.{topic_suffix}", **kwargs)
+
+    def send_error_message(self, error: Exception) -> None:
+        """Send an error message for this device."""
+        # Write to log
+        traceback_str = "".join(traceback.format_exception(error))
+        logging.error(f"Error with device {self.topic}: {traceback_str}")
+
+        # Send pubsub message
+        instance = self.get_instance_ref()
+        pub.sendMessage(
+            f"device.error.{instance!s}",
+            instance=instance,
+            error=error,
+        )
