@@ -125,6 +125,7 @@ class ScriptRunDialog(QDialog):
     def keyPressEvent(self, event: QKeyEvent):
         """Intercept when user presses escape to confirm whether to close dialog."""
         if event.key() == Qt.Key.Key_Escape:
-            self.close()
+            # Show the confirmation dialog instead of directly closing
+            self._stop_dlg.show()
         else:
             super().keyPressEvent(event)
