@@ -1,7 +1,8 @@
 """Provides a dialog to display the progress of a running measure script."""
 
 from pubsub import pub
-from PySide6.QtGui import QCloseEvent, QHideEvent
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent, QHideEvent, QKeyEvent
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -120,3 +121,10 @@ class ScriptRunDialog(QDialog):
         """Hide the dialog."""
         super().hideEvent(event)
         self._stop_dlg.hide()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        """Intercept when user presses escape to confirm whether to close dialog."""
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
+        else:
+            super().keyPressEvent(event)
