@@ -84,11 +84,9 @@ def test_init(subscribe_mock: MagicMock, serial_mock: MagicMock) -> None:
 @patch("frog.hardware.plugins.stepper_motor.st10_controller.StepperMotorBase")
 def test_close(stepper_cls: Mock, serial_dev_cls: Mock, dev: ST10Controller) -> None:
     """Test the close() method."""
-    with patch.object(dev, "stop_moving") as stop_moving_mock:
-        with patch.object(dev, "move_to") as move_mock:
-            dev.close()
-            stop_moving_mock.assert_called_once_with()
-            move_mock.assert_called_once_with("nadir")
+    with patch.object(dev, "move_to") as move_mock:
+        dev.close()
+        move_mock.assert_called_once_with("nadir")
 
     # Check that both parents' close() methods are called
     stepper_cls.close.assert_called_once_with(dev)
@@ -474,11 +472,15 @@ def test_get_step(
 @pytest.mark.parametrize("step", range(0, 40, 7))
 def test_set_step(dev: ST10Controller, step: int) -> None:
     """Test setting the step property."""
-    with patch.object(dev, "_write_check") as write_mock:
-        with patch.object(dev, "_notify_on_stopped") as notify_mock:
-            dev.step = step
-            write_mock.assert_called_once_with(f"FP{step}")
-            notify_mock.assert_called_once_with()
+    with (
+        patch.object(dev, "stop_moving") as stop_mock,
+        patch.object(dev, "_write_check") as write_mock,
+        patch.object(dev, "_notify_on_stopped") as notify_mock,
+    ):
+        dev.step = step
+        stop_mock.assert_called_once_with()
+        write_mock.assert_called_once_with(f"FP{step}")
+        notify_mock.assert_called_once_with()
 
 
 @pytest.mark.parametrize("string", ("a", "A", "Z", "hello"))

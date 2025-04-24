@@ -68,6 +68,7 @@ class DummyStepperMotor(
         Args:
             step: Which step position to move to
         """
+        self._move_end_timer.stop()
         logging.info(f"Moving stepper motor to step {step}")
         self._new_step = step
         self._move_end_timer.start()
