@@ -236,6 +236,10 @@ class ST10Controller(
         if not self.serial.is_open:
             return
 
+        # Don't handle move end events because they will likely happen after the device
+        # is disconnected
+        self._reader.async_read_completed.disconnect()
+
         try:
             self.stop_moving()
             self.move_to("nadir")
