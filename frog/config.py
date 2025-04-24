@@ -51,6 +51,9 @@ EM27_SENSORS_URL = "http://{host}/diag_autom.htm"
 EM27_SENSORS_POLL_INTERVAL = 60.0
 """Poll rate for EM27 properties."""
 
+DEFAULT_EM27_HTTP_TIMEOUT = 20.0
+"""The default HTTP timeout for the EM27Sensors and OPUSInterface devices."""
+
 DECADES_HOST = "localhost"
 """The IP address or hostname of the DECADES server."""
 

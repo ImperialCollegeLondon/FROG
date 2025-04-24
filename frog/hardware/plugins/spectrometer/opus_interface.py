@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from PySide6.QtCore import QTimer
 
 from frog.config import (
-    DEFAULT_HTTP_TIMEOUT,
+    DEFAULT_EM27_HTTP_TIMEOUT,
     DEFAULT_OPUS_HOST,
     DEFAULT_OPUS_POLLING_INTERVAL,
     DEFAULT_OPUS_PORT,
@@ -84,7 +84,7 @@ class OPUSInterface(
         host: str = DEFAULT_OPUS_HOST,
         port: int = DEFAULT_OPUS_PORT,
         polling_interval: float = DEFAULT_OPUS_POLLING_INTERVAL,
-        timeout: float = DEFAULT_HTTP_TIMEOUT,
+        timeout: float = DEFAULT_EM27_HTTP_TIMEOUT,
     ) -> None:
         """Create a new OPUSInterface.
 
