@@ -6,6 +6,7 @@ This is used to scrape the PSF27Sensor data table off the server.
 from decimal import Decimal
 
 from frog.config import (
+    DEFAULT_EM27_HTTP_TIMEOUT,
     DEFAULT_HTTP_TIMEOUT,
     EM27_HOST,
     EM27_SENSORS_POLL_INTERVAL,
@@ -112,7 +113,7 @@ class EM27Sensors(
         self,
         host: str = EM27_HOST,
         poll_interval: float = EM27_SENSORS_POLL_INTERVAL,
-        timeout: float = DEFAULT_HTTP_TIMEOUT,
+        timeout: float = DEFAULT_EM27_HTTP_TIMEOUT,
     ) -> None:
         """Create a new EM27Sensors.
 
