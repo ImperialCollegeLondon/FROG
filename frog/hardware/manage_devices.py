@@ -68,6 +68,7 @@ def _open_device(
     except Exception as error:
         logging.error(f"Failed to open {instance!s} device: {error!s}")
         pub.sendMessage(f"device.error.{instance!s}", instance=instance, error=error)
+        pub.sendMessage(f"device.closed.{instance!s}", instance=instance)
 
 
 def _try_close_device(device: Device) -> None:
