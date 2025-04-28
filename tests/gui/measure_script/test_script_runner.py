@@ -13,13 +13,10 @@ from frog.gui.measure_script.script import Script, ScriptRunner
 from frog.spectrometer_status import SpectrometerStatus
 
 
-def test_init(subscribe_mock: MagicMock, sendmsg_mock: MagicMock) -> None:
+def test_init(subscribe_mock: MagicMock) -> None:
     """Test ScriptRunner's constructor."""
     script = Script(Path(), 1, ())
     runner = ScriptRunner(script)
-
-    # Check we're stopping the motor
-    sendmsg_mock.assert_called_once_with(f"device.{STEPPER_MOTOR_TOPIC}.stop")
 
     # Check we're subscribed to abort messages
     subscribe_mock.assert_has_calls(

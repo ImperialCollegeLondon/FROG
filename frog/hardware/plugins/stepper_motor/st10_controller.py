@@ -237,7 +237,6 @@ class ST10Controller(
             return
 
         try:
-            self.stop_moving()
             self.move_to("nadir")
         except Exception as e:
             logging.error(f"Failed to reset mirror to downward position: {e}")
@@ -418,6 +417,8 @@ class ST10Controller(
             SerialTimeoutException: Timed out waiting for response from device
             ST10ControllerError: Malformed message received from device
         """
+        self.stop_moving()
+
         # "Feed to position"
         self._write_check(f"FP{step}")
         self._notify_on_stopped()

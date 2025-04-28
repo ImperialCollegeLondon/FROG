@@ -242,9 +242,6 @@ class ScriptRunner(StateMachine):
         self.current_measurement_count: int
         """How many times a measurement has been recorded at the current angle."""
 
-        # Send stop command in case motor is moving
-        pub.sendMessage(f"device.{STEPPER_MOTOR_TOPIC}.stop")
-
         # Actions to control the script
         pub.subscribe(self.abort, "measure_script.abort")
         pub.subscribe(self.pause, "measure_script.pause")
