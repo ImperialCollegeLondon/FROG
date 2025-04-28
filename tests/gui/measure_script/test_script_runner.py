@@ -113,8 +113,14 @@ def test_finish_moving(
         any_order=True,
     )
 
-    # Check that this message is sent on the last iteration
-    sendmsg_mock.assert_called_once_with("measure_script.end")
+    sendmsg_mock.assert_has_calls(
+        (
+            # Point mirror downwards
+            call(f"device.{STEPPER_MOTOR_TOPIC}.move.begin", target="nadir"),
+            # Notify listeners that measure script has finished
+            call("measure_script.end"),
+        )
+    )
 
 
 def test_finish_moving_paused(

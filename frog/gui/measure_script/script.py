@@ -200,9 +200,7 @@ class ScriptRunner(StateMachine):
     """Finish the moving stage."""
     finish_waiting_for_move = waiting_to_move.to(moving)
     """Stop waiting and start the next move."""
-    cancel_move = moving.to(
-        not_running, after=lambda: pub.sendMessage(f"device.{STEPPER_MOTOR_TOPIC}.stop")
-    )
+    cancel_move = moving.to(not_running)
     """Cancel the current movement."""
     start_measuring = waiting_to_measure.to(measuring)
     """Start recording for the current measurement."""
@@ -278,6 +276,9 @@ class ScriptRunner(StateMachine):
         pub.unsubscribe(
             self._on_spectrometer_error, f"device.error.{SPECTROMETER_TOPIC}"
         )
+
+        # Reset mirror to point downwards on measure script end
+        pub.sendMessage(f"device.{STEPPER_MOTOR_TOPIC}.move.begin", target="nadir")
 
         # Send message signalling that the measure script is no longer running
         pub.sendMessage("measure_script.end")
