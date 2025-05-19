@@ -14,7 +14,7 @@ authors = [
 [tool.poetry.dependencies]
 python = ">=3.13,<3.14"
 PySide6 = "^6.9.0"
-matplotlib = "^3.10.1"
+matplotlib = "^3.10.3"
 platformdirs = "^4.2.2"
 pypubsub = "^4.0.3"
 pyyaml = "^6.0"
