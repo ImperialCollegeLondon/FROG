@@ -54,7 +54,8 @@ is also a YAML object, containing key-value pairs for each of the device paramet
 [Hardware] again). If any of the parameters are omitted, their default values will be
 used.
 
-Note that the port names are in a FROG-specific format. The string is composed of the
+Note that the port names for USB devices are in a FROG-specific format (non-USB serial
+devices are just listed with the port name, e.g. COM3). The string is composed of the
 USB vendor and product IDs and (optionally) a number to distinguish ports which share
 all these properties (as happens with USB-to-serial devices with multiple ports, for
 example). The easiest way to figure out these strings is to run FROG and click on
