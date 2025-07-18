@@ -12,6 +12,7 @@ runs:
       uses: astral-sh/setup-uv@v6
       with:
         enable-cache: true
+        activate-environment: true
         python-version: ${{ inputs.python-version }}
 
     - name: Install project
