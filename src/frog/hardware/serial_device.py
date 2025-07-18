@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections import Counter
 
 from serial import Serial, SerialException
 from serial.tools.list_ports import comports
@@ -60,7 +61,7 @@ def _get_usb_serial_ports(refresh: bool = False) -> dict[str, str]:
 
     # Keep track of ports with the same vendor and product ID and assign them an
     # additional number to distinguish them
-    counter: dict[tuple[int, int], int] = {}
+    counter: Counter[tuple[int, int]] = Counter()
     _serial_ports = {}
     for port in sorted(comports(), key=lambda port: _get_port_parts(port.device)):
         # Vendor ID is a USB-specific field, so we can use this to check whether the
@@ -69,9 +70,6 @@ def _get_usb_serial_ports(refresh: bool = False) -> dict[str, str]:
             continue
 
         key = (port.vid, port.pid)
-        if key not in counter:
-            counter[key] = 0
-
         _serial_ports[_port_info_to_str(*key, counter[key])] = port.device
         counter[key] += 1
 
