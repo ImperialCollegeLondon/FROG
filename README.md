@@ -64,16 +64,20 @@ To get started:
    pre-commit install
    ```
 
+1. **Optional:** [Activate your virtual
+   environment.](https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment) This makes
+   the various tools installed into your virtual environment, such as Python and `pytest` available on the path. Alternatively, you can prefix the below commands with `uv run`.
+
 1. Run the main app:
 
    ```bash
-   uv run python -m frog
+   python -m frog
    ```
 
 1. Run the tests:
 
    ```bash
-   uv run pytest
+   pytest
    ```
 
 1. Build the user guide:
@@ -81,5 +85,5 @@ To get started:
    1. Install [pandoc](https://pandoc.org/installing.html)
 
    1. ```bash
-      uv run docs/gen_user_guide.py
+      docs/gen_user_guide.py
       ```
