@@ -10,4 +10,4 @@ runs:
 
     - name: Build package
       shell: bash
-      run: uv run pyinstaller src/FROG.spec
+      run: pyinstaller src/FROG.spec
