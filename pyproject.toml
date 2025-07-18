@@ -1,5 +1,5 @@
 [project]
-name = "frog"
+name = "FROG"
 version = "3.0.0"
 description = "A graphical user interface for controlling and monitoring an interferometer device."
 authors = [
