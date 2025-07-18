@@ -1,6 +1,6 @@
 site_name: FROG
 repo_url: https://github.com/ImperialCollegeLondon/FROG
-watch: [frog]
+watch: [src/frog]
 
 theme:
   name: "material"
@@ -32,7 +32,7 @@ plugins:
             show_root_heading: true
             show_category_heading: true
             merge_init_into_class: true
-          paths: [frog]
+          paths: [src/frog]
 
 nav:
   - FROG documentation: index.md

@@ -1,58 +1,64 @@
-[tool.poetry]
+[project]
 name = "FROG"
 version = "3.0.0"
 description = "A graphical user interface for controlling and monitoring an interferometer device."
 authors = [
-    "Alex Dewar <a.dewar@imperial.ac.uk>",
-    "Diego Alonso Álvarez <d.alonso-alvarez@imperial.ac.uk>",
-    "Dan Cummins <daniel.cummins17@imperial.ac.uk>",
-    "Callum West <c.west@imperial.ac.uk>",
-    "James Turner <james.turner@imperial.ac.uk>",
-    "Imperial College London RSE Team <ict-rse-team@imperial.ac.uk>",
+    { name = "Alex Dewar", email = "a.dewar@imperial.ac.uk" },
+    { name = "Diego Alonso Álvarez", email = "d.alonso-alvarez@imperial.ac.uk" },
+    { name = "Dan Cummins", email = "daniel.cummins17@imperial.ac.uk" },
+    { name = "Callum West", email = "c.west@imperial.ac.uk" },
+    { name = "James Turner", email = "james.turner@imperial.ac.uk" },
+    { name = "Imperial College London RSE Team", email = "ict-rse-team@imperial.ac.uk" },
+]
+requires-python = ">=3.13"
+dependencies = [
+    "PySide6<7.0.0,>=6.9.0",
+    "matplotlib<4.0.0,>=3.10.1",
+    "platformdirs<5.0.0,>=4.2.2",
+    "pypubsub<5.0.0,>=4.0.3",
+    "pyyaml<7.0,>=6.0",
+    "schema<1.0.0,>=0.7.7",
+    "pyserial<4.0,>=3.5",
+    "beautifulsoup4<5.0.0,>=4.12.3",
+    "python-statemachine<2.4.0",
+    "numpy<3.0.0,>=2.2.4",
+    "decorator<6.0.0,>=5.1.1",
+    "pycsvy<1.0.0,>=0.2.3",
+    "frozendict<3.0.0,>=2.4.6",
+    "crc<8.0.0,>=7.1.0",
+    "ntplib<1.0.0,>=0.4.0",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.13,<3.14"
-PySide6 = "^6.9.0"
-matplotlib = "^3.10.1"
-platformdirs = "^4.2.2"
-pypubsub = "^4.0.3"
-pyyaml = "^6.0"
-schema = "^0.7.7"
-pyserial = "^3.5"
-beautifulsoup4 = "^4.12.3"
-python-statemachine = "<2.4.0"
-numpy = "^2.2.4"
-decorator = "^5.1.1"
-pycsvy = "^0.2.3"
-frozendict = "^2.4.6"
-crc = "^7.1.0"
-ntplib = "^0.4.0"
+[dependency-groups]
+dev = [
+    "pytest<9.0,>=8.3",
+    "pytest-cov<7.0.0,>=6.1.1",
+    "pytest-mock<4.0.0,>=3.14.0",
+    "pre-commit<5.0.0,>=4.2.0",
+    "pyinstaller<7.0.0,>=6.11.1",
+    "types-pyyaml<7.0.0.0,>=6.0.12.20250326",
+    "types-beautifulsoup4<5.0.0.0,>=4.12.0.20240511",
+    "pytest-qt<5.0.0,>=4.4.0",
+    "types-decorator<6.0.0.0,>=5.2.0.20250324",
+    "pydot<4.0.0,>=3.0.4",
+    "ruff<1.0.0,>=0.11.4",
+    "freezegun<2.0.0,>=1.5.1",
+    "mypy<2.0.0,>=1.15.0",
+    "pytest-xdist[psutil]<4.0.0,>=3.6.1",
+]
+docs = [
+    "mkdocs<2.0.0,>=1.6.1",
+    "mkdocstrings<1.0.0,>=0.29.0",
+    "mkdocstrings-python<2.0.0,>=1.13.0",
+    "mkdocs-material<10.0.0,>=9.6.11",
+    "mkdocs-gen-files<1.0.0,>=0.5.0",
+    "mkdocs-literate-nav<1.0.0,>=0.6.2",
+    "mkdocs-section-index<1.0.0,>=0.3.10",
+]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3"
-pytest-cov = "^6.1.1"
-pytest-mock = "^3.14.0"
-pre-commit = "^4.2.0"
-pyinstaller = "^6.11.1"
-types-pyyaml = "^6.0.12.20250326"
-types-beautifulsoup4 = "^4.12.0.20240511"
-pytest-qt = "^4.4.0"
-types-decorator = "^5.2.0.20250324"
-pydot = "^3.0.4"
-ruff = "^0.11.4"
-freezegun = "^1.5.1"
-mypy = "^1.15.0"
-pytest-xdist = { extras = ["psutil"], version = "^3.6.1" }
-
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.6.1"
-mkdocstrings = "^0.29.0"
-mkdocstrings-python = "^1.13.0"
-mkdocs-material = "^9.6.11"
-mkdocs-gen-files = "^0.5.0"
-mkdocs-literate-nav = "^0.6.2"
-mkdocs-section-index = "^0.3.10"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 target-version = "py313"
@@ -81,7 +87,3 @@ addopts = "-v -p no:warnings -n auto --cov=frog --cov-report=html:htmlcov/covera
 
 [tool.coverage.report]
 exclude_lines = ["if __name__ == .__main__.:"]
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"

@@ -1,6 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
-import docs.gen_user_guide as gen_guide
 from frog.hardware.plugins import load_all_plugins
+
+from pathlib import Path
+import sys
+
+# Generate user guide with pandoc
+repo_root = str(Path(sys.argv[0]).parent.parent)
+sys.path.append(repo_root)
+import docs.gen_user_guide as gen_guide
 
 block_cipher = None
 
@@ -17,8 +24,8 @@ a = Analysis(
             "frog/hardware/plugins/sensors/diag_autom.htm",
             "frog/hardware/plugins/sensors",
         ),
-        ("docs/user_guide.html", "docs"),
-        ("docs/fallback.html", "docs"),
+        ("../docs/user_guide.html", "docs"),
+        ("../docs/fallback.html", "docs"),
     ],
     hiddenimports=["frog.gui.images", *load_all_plugins()],
     hookspath=[],
