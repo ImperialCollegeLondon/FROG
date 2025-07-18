@@ -8,14 +8,15 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install Poetry
-      shell: bash
-      run: pipx install poetry
-
-    - uses: actions/setup-python@v5
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v6
       with:
+        enable-cache: true
         python-version: ${{ inputs.python-version }}
-        cache: poetry
+
+    - name: Install project
+      shell: bash
+      run: uv sync --all-groups
 
     - name: Install system dependencies in Linux
       if: runner.os == 'Linux'
@@ -25,7 +26,3 @@ runs:
 
         # Without this, PySide6 gives an ImportError
         sudo apt install libegl1
-
-    - name: Install dependencies
-      shell: bash
-      run: poetry install

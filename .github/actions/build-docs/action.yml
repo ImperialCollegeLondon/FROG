@@ -12,5 +12,5 @@ runs:
     - name: Build documentation with MkDocs
       shell: bash
       run: |
-        poetry run python docs/gen_state_machine_diagrams.py
-        poetry run mkdocs build --strict
+        uv run docs/gen_state_machine_diagrams.py
+        uv run mkdocs build --strict
