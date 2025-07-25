@@ -3,7 +3,7 @@
 import logging
 from collections.abc import Mapping
 from importlib import import_module
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from pubsub import pub
 
@@ -13,10 +13,10 @@ from frog.hardware.plugins import __name__ as _plugins_name
 
 _devices: dict[DeviceInstanceRef, Device] = {}
 
-_T = TypeVar("_T", bound=Device)
 
-
-def get_device_instance(base_type: type[_T], name: str | None = None) -> _T | None:
+def get_device_instance[T: Device](
+    base_type: type[T], name: str | None = None
+) -> T | None:
     """Get the instance of the device of type base_type with an optional name.
 
     If there is no device matching these parameters, None is returned.
@@ -24,7 +24,7 @@ def get_device_instance(base_type: type[_T], name: str | None = None) -> _T | No
     key = DeviceInstanceRef(base_type.get_device_base_type_info().name, name)
 
     try:
-        return cast(_T, _devices[key])
+        return cast(T, _devices[key])
     except KeyError:
         return None
 
