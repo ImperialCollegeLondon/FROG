@@ -20,7 +20,7 @@ dependencies = [
     "schema<1.0.0,>=0.7.7",
     "pyserial<4.0,>=3.5",
     "beautifulsoup4<5.0.0,>=4.12.3",
-    "python-statemachine==2.3.6",
+    "python-statemachine~=2.3.6",
     "numpy<3.0.0,>=2.2.4",
     "decorator<6.0.0,>=5.1.1",
     "pycsvy<1.0.0,>=0.2.3",
