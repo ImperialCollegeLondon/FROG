@@ -325,7 +325,7 @@ requires-dist = [
     { name = "pypubsub", specifier = ">=4.0.3,<5.0.0" },
     { name = "pyserial", specifier = ">=3.5,<4.0" },
     { name = "pyside6", specifier = ">=6.9.0,<7.0.0" },
-    { name = "python-statemachine", specifier = "<2.4.0" },
+    { name = "python-statemachine", specifier = "~=2.3.6" },
     { name = "pyyaml", specifier = ">=6.0,<7.0" },
     { name = "schema", specifier = ">=0.7.7,<1.0.0" },
 ]
@@ -1064,6 +1064,7 @@ wheels = [
 name = "pypubsub"
 version = "4.0.3"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/23/64/e7907a632cfbd76fd17e86ed6279422345958cf9fdc8216d95d13d9fee1b/pypubsub-4.0.3.tar.gz", hash = "sha256:32d662de3ade0fb0880da92df209c62a4803684de5ccb8d19421c92747a258c7", size = 49524, upload-time = "2025-07-21T11:48:14.001Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1a/41/a0aceb552d8ec63bb1e8223d130f9dd0f736470036d75d708183b104a2cb/Pypubsub-4.0.3-py3-none-any.whl", hash = "sha256:7f716bae9388afe01ff82b264ba8a96a8ae78b42bb1f114f2716ca8f9e404e2a", size = 61368, upload-time = "2019-01-28T00:36:11.389Z" },
 ]
