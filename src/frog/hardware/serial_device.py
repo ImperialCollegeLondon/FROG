@@ -1,9 +1,10 @@
-"""Provides a base class for USB serial devices."""
+"""Provides a base class for serial devices."""
 
 from __future__ import annotations
 
 import logging
 import re
+from collections import Counter
 
 from serial import Serial, SerialException
 from serial.tools.list_ports import comports
@@ -44,8 +45,16 @@ def _get_port_parts(port: str) -> tuple[str, int]:
     return match.group(1), num
 
 
-def _get_usb_serial_ports(refresh: bool = False) -> dict[str, str]:
-    """Get the ports for connected USB serial devices.
+def _port_and_desc_to_str(port: str, desc: str) -> str:
+    """Format a port name and description as a string."""
+    if port == desc:
+        return port
+    else:
+        return f"{port} ({desc})"
+
+
+def _get_serial_ports(refresh: bool = False) -> dict[str, str]:
+    """Get the ports for connected serial devices.
 
     The list of ports is only requested from the OS once and the result is cached,
     unless the refresh argument is set to true.
@@ -60,28 +69,27 @@ def _get_usb_serial_ports(refresh: bool = False) -> dict[str, str]:
 
     # Keep track of ports with the same vendor and product ID and assign them an
     # additional number to distinguish them
-    counter: dict[tuple[int, int], int] = {}
+    counter: Counter[tuple[int, int]] = Counter()
     _serial_ports = {}
     for port in sorted(comports(), key=lambda port: _get_port_parts(port.device)):
         # Vendor ID is a USB-specific field, so we can use this to check whether the
         # device is USB or not
         if port.vid is None:
+            _serial_ports[port.device] = port.device
             continue
 
         key = (port.vid, port.pid)
-        if key not in counter:
-            counter[key] = 0
-
         _serial_ports[_port_info_to_str(*key, counter[key])] = port.device
         counter[key] += 1
 
     if not _serial_ports:
-        logging.warning("No USB serial devices found")
+        logging.warning("No serial devices found")
     else:
         port_strs = "".join(
-            f"\n\t- {port}: {desc}" for desc, port in _serial_ports.items()
+            f"\n\t- {_port_and_desc_to_str(port, desc)}"
+            for desc, port in _serial_ports.items()
         )
-        logging.info(f"Found the following USB serial devices:{port_strs}")
+        logging.info(f"Found the following serial devices:{port_strs}")
 
     # Sort by the string representation of the key
     _serial_ports = dict(sorted(_serial_ports.items(), key=lambda item: item[0]))
@@ -93,11 +101,11 @@ def _create_serial(port: str, baudrate: int, refresh: bool) -> Serial:
     """Create a new serial device and connect to it.
 
     Args:
-        port: Description of USB port (vendor ID + product ID)
+        port: Description of port (vendor ID + product ID for USB, otherwise name)
         baudrate: Baud rate of port
         refresh: Whether to force-refresh the list of COM ports
     """
-    devices = _get_usb_serial_ports(refresh)
+    devices = _get_serial_ports(refresh)
 
     try:
         device = devices[port]
@@ -111,13 +119,13 @@ class SerialDevice(
     AbstractDevice,
     parameters={
         "port": (
-            "USB port (vendor and product ID)",
-            tuple(_get_usb_serial_ports().keys()),
+            "Serial port",
+            tuple(_get_serial_ports().keys()),
         ),
         "baudrate": ("Baud rate", BAUDRATES),
     },
 ):
-    """A base class for USB serial devices.
+    """A base class for serial devices.
 
     Note that it is not sufficient for a device type class to inherit from this class
     alone: it must also inherit from a device base class. When doing so, this class
@@ -133,7 +141,7 @@ class SerialDevice(
         """Create a new serial device.
 
         Args:
-            port: Description of USB port (vendor ID + product ID)
+            port: Description/name of serial port
             baudrate: Baud rate of port
         """
         # If port is unknown, it may be because the user connected the device after the
