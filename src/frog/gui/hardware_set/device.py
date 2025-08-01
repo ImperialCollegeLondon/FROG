@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -11,6 +11,7 @@ from frozendict import frozendict
 from pubsub import pub
 
 from frog.device_info import DeviceInstanceRef
+from frog.gui.error_message import show_error_message
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,23 @@ class OpenDeviceArgs:
         return cls(DeviceInstanceRef.from_str(instance), class_name, frozendict(params))
 
 
+@dataclass
+class ActiveDeviceProperties:
+    """The properties of a device that is connecting or connected."""
+
+    args: OpenDeviceArgs
+    """Arguments used to open the device."""
+    state: ConnectionStatus
+    """Whether the device is connecting or connected."""
+
+    def __post_init__(self) -> None:
+        """Check whether user attempted to create for a disconnected device."""
+        if self.state == ConnectionStatus.DISCONNECTED:
+            raise ValueError(
+                "Cannot create ActiveDeviceProperties for disconnected device"
+            )
+
+
 class ConnectionStatus(Enum):
     """The connection state of a device."""
 
@@ -57,3 +75,70 @@ def open_device(
 def close_device(instance: DeviceInstanceRef) -> None:
     """Close a connection to a device."""
     pub.sendMessage("device.close", instance=instance)
+
+
+def get_connected_devices() -> Iterable[OpenDeviceArgs]:
+    """Get active devices which are connected (not connecting)."""
+    return (
+        props.args
+        for props in _active_devices.values()
+        if props.state == ConnectionStatus.CONNECTED
+    )
+
+
+def get_active_devices() -> Mapping[DeviceInstanceRef, ActiveDeviceProperties]:
+    """Get the current active devices."""
+    return _active_devices
+
+
+def disconnect_all() -> None:
+    """Disconnect from all devices."""
+    # We need to make a copy because keys will be removed as we close devices
+    for device in list(_active_devices.keys()):
+        pub.sendMessage("device.close", instance=device)
+
+
+def _on_device_open_start(
+    instance: DeviceInstanceRef, class_name: str, params: Mapping[str, Any]
+) -> None:
+    """Store device open parameters and update GUI."""
+    args = OpenDeviceArgs(instance, class_name, frozendict(params))
+    dev_props = ActiveDeviceProperties(args, ConnectionStatus.CONNECTING)
+    _active_devices[instance] = dev_props
+
+
+def _on_device_open_end(instance: DeviceInstanceRef, class_name: str) -> None:
+    """Add instance to _connected_devices and update GUI."""
+    dev_props = _active_devices[instance]
+    dev_props.state = ConnectionStatus.CONNECTED
+    assert dev_props.args.class_name == class_name
+
+
+def _on_device_closed(instance: DeviceInstanceRef) -> None:
+    """Remove instance from _connected devices and update GUI."""
+    try:
+        # Remove the device matching this instance type (there should be only one)
+        del _active_devices[instance]
+    except KeyError:
+        # No device of this type found
+        pass
+
+
+def _on_device_error(instance: DeviceInstanceRef, error: BaseException) -> None:
+    """Show an error message when something has gone wrong with the device.
+
+    Todo:
+        The name of the device isn't currently very human readable.
+    """
+    show_error_message(
+        None,
+        f"A fatal error has occurred with the {instance!s} device: {error!s}",
+        title="Device error",
+    )
+
+
+_active_devices: dict[DeviceInstanceRef, ActiveDeviceProperties] = {}
+pub.subscribe(_on_device_open_start, "device.before_opening")
+pub.subscribe(_on_device_open_end, "device.after_opening")
+pub.subscribe(_on_device_closed, "device.closed")
+pub.subscribe(_on_device_error, "device.error")
