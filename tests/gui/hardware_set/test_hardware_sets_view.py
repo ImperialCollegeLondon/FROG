@@ -1,7 +1,6 @@
 """Tests for the HardwareSetsControl class."""
 
 from collections.abc import Iterable, Sequence
-from contextlib import nullcontext as does_not_raise
 from itertools import chain
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
@@ -9,12 +8,16 @@ from unittest.mock import MagicMock, Mock, PropertyMock, call, patch
 import pytest
 
 from frog.device_info import DeviceInstanceRef
-from frog.gui.hardware_set.device import ConnectionStatus, OpenDeviceArgs
+from frog.gui.hardware_set.device import (
+    ActiveDeviceManager,
+    ActiveDeviceProperties,
+    ConnectionStatus,
+    OpenDeviceArgs,
+)
 from frog.gui.hardware_set.hardware_set import (
     HardwareSet,
 )
 from frog.gui.hardware_set.hardware_sets_view import (
-    ActiveDeviceProperties,
     HardwareSetsControl,
     _get_last_selected_hardware_set,
 )
@@ -70,12 +73,12 @@ def test_init(
     update_mock: Mock,
     cur_hw_set_mock: PropertyMock,
     last_selected: str | None,
-    subscribe_mock: MagicMock,
     qtbot,
 ) -> None:
     """Test the constructor."""
     load_last_mock.return_value = last_selected
-    hw_sets = HardwareSetsControl()
+    device_manager = MagicMock()
+    hw_sets = HardwareSetsControl(device_manager)
     load_last_mock.assert_called_once_with()
     update_mock.assert_called_once_with()
     if last_selected:
@@ -83,9 +86,15 @@ def test_init(
     else:
         cur_hw_set_mock.assert_not_called()
 
-    # HardwareSetsComboBox's constructor will also call pub.subscribe
-    subscribe_mock.assert_any_call(hw_sets._on_device_open_end, "device.after_opening")
-    subscribe_mock.assert_any_call(hw_sets._on_device_closed, "device.closed")
+    device_manager.device_started_open.connect.assert_called_once_with(
+        hw_sets._on_device_open_start
+    )
+    device_manager.device_opened.connect.assert_called_once_with(
+        hw_sets._on_device_open_end
+    )
+    device_manager.device_closed.connect.assert_called_once_with(
+        hw_sets._on_device_closed
+    )
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_hardware_sets")
@@ -148,7 +157,7 @@ def test_update_control_state(
     connecting_devices: Sequence[int],
     connected_devices: Sequence[int],
     hardware_set: Sequence[int],
-    hw_control: HardwareSetsControl,
+    subscribe_mock: MagicMock,
     sendmsg_mock: MagicMock,
     qtbot,
 ) -> None:
@@ -157,9 +166,10 @@ def test_update_control_state(
     if connecting_devices:
         connect_enabled = False
 
-    hw_control._active_devices = _dev_to_connecting(
+    active_devices = _dev_to_connecting(
         _get_devices(connecting_devices)
     ) | _dev_to_connected(_get_devices(connected_devices))
+    hw_control = HardwareSetsControl(ActiveDeviceManager(active_devices))
 
     with patch(
         "frog.gui.hardware_set.hardware_sets_view"
@@ -188,112 +198,81 @@ def test_connect_btn(
     connected_devices: Sequence[int],
     hardware_set: Sequence[int],
     open_called: Sequence[int],
-    hw_control: HardwareSetsControl,
     qtbot,
 ) -> None:
     """Test the connect button."""
     file_path = Path("path/test.yaml")
+    active_devices = _dev_to_connected(_get_devices(connected_devices))
+    hw_control = HardwareSetsControl(ActiveDeviceManager(active_devices))
     with patch.object(hw_control, "_combo") as combo_mock:
         combo_mock.current_hardware_set_devices = _get_devices(hardware_set)
         combo_mock.current_hardware_set.file_path = file_path
-        with patch.object(
-            hw_control,
-            "_active_devices",
-            _dev_to_connected(_get_devices(connected_devices)),
-        ):
-            hw_control._connect_btn.click()
+        hw_control._connect_btn.click()
 
-            open_mock.assert_has_calls(
-                [
-                    call(dev.class_name, dev.instance, dev.params)
-                    for dev in _get_devices(open_called)
-                ],
-                any_order=True,
-            )
+        open_mock.assert_has_calls(
+            [
+                call(dev.class_name, dev.instance, dev.params)
+                for dev in _get_devices(open_called)
+            ],
+            any_order=True,
+        )
 
-            settings_mock.setValue.assert_called_once_with(
-                "hardware_set/selected", str(file_path)
-            )
+        settings_mock.setValue.assert_called_once_with(
+            "hardware_set/selected", str(file_path)
+        )
 
 
-def test_disconnect_button(
-    hw_control: HardwareSetsControl, sendmsg_mock: Mock, qtbot
-) -> None:
+def test_disconnect_button(sendmsg_mock: Mock, qtbot) -> None:
     """Test the disconnect button."""
+    hw_control = HardwareSetsControl(ActiveDeviceManager(_dev_to_connected(DEVICES)))
     with patch.object(hw_control, "_update_control_state") as update_mock:
-        with patch.object(hw_control, "_active_devices", _dev_to_connected(DEVICES)):
-            hw_control._disconnect_btn.setEnabled(True)
-            hw_control._disconnect_btn.click()
-            sendmsg_mock.assert_has_calls(
-                [call("device.close", instance=d.instance) for d in DEVICES]
-            )
-            update_mock.assert_called_once_with()
+        hw_control._disconnect_btn.setEnabled(True)
+        hw_control._disconnect_btn.click()
+        sendmsg_mock.assert_has_calls(
+            [call("device.close", instance=d.instance) for d in DEVICES]
+        )
+        update_mock.assert_called_once_with()
 
 
-def test_on_device_open_start(hw_control: HardwareSetsControl, qtbot) -> None:
+def test_on_device_open_start(qtbot) -> None:
     """Test the _on_device_open_start() method."""
-    device = DEVICES[0]
-    assert not hw_control._active_devices
-    hw_control._on_device_open_start(device.instance, device.class_name, device.params)
-    assert hw_control._active_devices == {
-        device.instance: ActiveDeviceProperties(device, ConnectionStatus.CONNECTING)
-    }
+    hw_control = HardwareSetsControl()
+    with patch.object(hw_control, "_update_control_state") as update_mock:
+        device = DEVICES[0]
+        hw_control._on_device_open_start(
+            device.instance, device.class_name, device.params
+        )
+        update_mock.assert_called_once_with()
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.settings")
-def test_on_device_open_end(
-    settings_mock: Mock, hw_control: HardwareSetsControl, qtbot
-) -> None:
+def test_on_device_open_end(settings_mock: Mock, qtbot) -> None:
     """Test the _on_device_open_end() method."""
     device = DEVICES[0]
-    assert not hw_control._active_devices
-    hw_control._active_devices[device.instance] = ActiveDeviceProperties(
-        device, ConnectionStatus.CONNECTING
-    )
+    active_devices = {
+        device.instance: ActiveDeviceProperties(device, ConnectionStatus.CONNECTING)
+    }
+    hw_control = HardwareSetsControl(ActiveDeviceManager(active_devices))
     with patch.object(hw_control, "_update_control_state") as update_mock:
         hw_control._on_device_open_end(
             instance=device.instance, class_name=device.class_name
         )
-        assert hw_control._active_devices == {
-            device.instance: ActiveDeviceProperties(device, ConnectionStatus.CONNECTED)
-        }
-        update_mock.assert_called_once_with()
         settings_mock.setValue.assert_has_calls(
             [
                 call(f"device/type/{device.instance!s}", device.class_name),
                 call(f"device/params/{device.class_name}", device.params),
             ]
         )
+        update_mock.assert_called_once_with()
 
 
 def test_on_device_closed(hw_control: HardwareSetsControl, qtbot) -> None:
     """Test the _on_device_closed() method."""
-    device = DEVICES[0]
-    assert not hw_control._active_devices
+    hw_control = HardwareSetsControl()
     with patch.object(hw_control, "_update_control_state") as update_mock:
-        hw_control._active_devices = {
-            device.instance: ActiveDeviceProperties(device, ConnectionStatus.CONNECTED)
-        }
+        device = DEVICES[0]
         hw_control._on_device_closed(device.instance)
-        assert not hw_control._active_devices
         update_mock.assert_called_once_with()
-
-
-def test_on_device_closed_not_found(hw_control: HardwareSetsControl, qtbot) -> None:
-    """Test that _on_device_closed() does not raise an error if device is not found."""
-    device = DEVICES[0]
-    assert not hw_control._active_devices
-    with does_not_raise():
-        hw_control._on_device_closed(device.instance)
-
-
-@patch("frog.gui.hardware_set.hardware_sets_view.show_error_message")
-def test_on_device_error(
-    error_message_mock: Mock, hw_control: HardwareSetsControl, qtbot
-) -> None:
-    """Test the _on_device_error() method."""
-    hw_control._on_device_error(DeviceInstanceRef("base_type"), RuntimeError("boo"))
-    error_message_mock.assert_called_once()
 
 
 def test_show_manage_devices_dialog(hw_control: HardwareSetsControl, qtbot) -> None:

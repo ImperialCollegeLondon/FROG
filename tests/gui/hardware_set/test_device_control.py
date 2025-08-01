@@ -21,14 +21,16 @@ CONNECTED_DEVICES = (
 @pytest.fixture
 def widget(sendmsg_mock: MagicMock, subscribe_mock: Mock, qtbot) -> DeviceControl:
     """Return a DeviceControl fixture."""
-    return DeviceControl(set(CONNECTED_DEVICES))
+    device_manager = MagicMock()
+    device_manager.get_connected_devices.return_value = CONNECTED_DEVICES
+    return DeviceControl(device_manager)
 
 
 def test_init(sendmsg_mock: MagicMock, subscribe_mock: MagicMock, qtbot) -> None:
     """Test the constructor."""
-    devices = MagicMock()
-    widget = DeviceControl(devices)
-    assert widget._connected_devices is devices
+    device_manager = MagicMock()
+    widget = DeviceControl(device_manager)
+    assert widget._device_manager is device_manager
 
     # Check that the list of devices was requested and the response is listened for
     subscribe_mock.assert_called_once_with(
