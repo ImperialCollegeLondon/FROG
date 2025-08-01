@@ -6,8 +6,10 @@ from typing import Any, cast
 
 from frozendict import frozendict
 from pubsub import pub
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QPushButton,
@@ -73,8 +75,11 @@ class ManageDevicesDialog(QDialog):
         self.setWindowTitle("Manage devices")
         self.setModal(True)
 
-        layout = QVBoxLayout()
-        layout.addWidget(DeviceControl(connected_devices))
+        layout = QGridLayout()
+        layout.addWidget(DeviceControl(connected_devices), 0, 0)
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.close)
+        layout.addWidget(close_btn, 1, 0, 1, 1, Qt.AlignmentFlag.AlignCenter)
         self.setLayout(layout)
 
 
