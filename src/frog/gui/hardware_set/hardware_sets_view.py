@@ -8,6 +8,7 @@ from frozendict import frozendict
 from pubsub import pub
 from PySide6.QtWidgets import (
     QDialog,
+    QDialogButtonBox,
     QGroupBox,
     QHBoxLayout,
     QPushButton,
@@ -75,6 +76,14 @@ class ManageDevicesDialog(QDialog):
 
         layout = QVBoxLayout()
         layout.addWidget(DeviceControl(connected_devices))
+
+        buttonbox = QDialogButtonBox()
+        buttonbox.addButton(
+            QPushButton("Close"), QDialogButtonBox.ButtonRole.RejectRole
+        )
+        buttonbox.rejected.connect(self.reject)
+        layout.addWidget(buttonbox)
+
         self.setLayout(layout)
 
 
