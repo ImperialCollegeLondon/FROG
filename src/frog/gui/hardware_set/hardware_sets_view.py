@@ -179,8 +179,6 @@ class HardwareSetsControl(QGroupBox):
         ):
             device.open()
 
-        self._update_control_state()
-
     def _on_device_open_start(
         self, instance: DeviceInstanceRef, class_name: str, params: Mapping[str, Any]
     ) -> None:
@@ -194,7 +192,6 @@ class HardwareSetsControl(QGroupBox):
     def _on_disconnect_btn_pressed(self) -> None:
         """Disconnect from all devices in current hardware set."""
         self._device_manager.disconnect_all()
-        self._update_control_state()
 
     def _on_device_open_end(self, instance: DeviceInstanceRef, class_name: str) -> None:
         """Add instance to _connected_devices and update GUI."""

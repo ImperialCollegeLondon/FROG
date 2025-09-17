@@ -222,16 +222,14 @@ def test_connect_btn(
         )
 
 
-def test_disconnect_button(sendmsg_mock: Mock, qtbot) -> None:
+def test_disconnect_btn(sendmsg_mock: Mock, qtbot) -> None:
     """Test the disconnect button."""
     hw_control = HardwareSetsControl(ActiveDeviceManager(_dev_to_connected(DEVICES)))
-    with patch.object(hw_control, "_update_control_state") as update_mock:
-        hw_control._disconnect_btn.setEnabled(True)
-        hw_control._disconnect_btn.click()
-        sendmsg_mock.assert_has_calls(
-            [call("device.close", instance=d.instance) for d in DEVICES]
-        )
-        update_mock.assert_called_once_with()
+    hw_control._disconnect_btn.setEnabled(True)
+    hw_control._disconnect_btn.click()
+    sendmsg_mock.assert_has_calls(
+        [call("device.close", instance=d.instance) for d in DEVICES]
+    )
 
 
 def test_on_device_open_start(qtbot) -> None:
