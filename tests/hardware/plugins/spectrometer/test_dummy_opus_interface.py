@@ -88,7 +88,7 @@ def test_sm_stop(sm: OPUSStateMachine) -> None:
         sm.current_state = OPUSStateMachine.measuring
         observer = _MockObserver()
         sm.add_observer(observer)
-        sm.stop()
+        sm.cancel()
         observer.assert_has_states(
             OPUSStateMachine.cancelling, OPUSStateMachine.connected
         )

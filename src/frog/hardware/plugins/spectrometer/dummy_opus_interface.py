@@ -81,7 +81,7 @@ class OPUSStateMachine(StateMachine):
         self._start_connecting()
         self._finish_connecting()
 
-    def stop(self) -> None:
+    def cancel(self) -> None:
         """Stop the current measurement."""
         self._cancel_measuring()
         self._reset_after_cancelling()
