@@ -1,0 +1,13 @@
+[
+    {
+        "label": "FROG",
+        "adapter": "Debugpy",
+        "request": "launch",
+        "module": "frog",
+        "cwd": "$ZED_WORKTREE_ROOT",
+        "autoReload": {
+            "enable": true
+        },
+        "justMyCode": true
+    }
+]
