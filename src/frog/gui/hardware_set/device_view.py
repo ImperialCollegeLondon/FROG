@@ -362,14 +362,11 @@ class DeviceControl(QGroupBox):
 
     def _get_connected_device(self, instance: DeviceInstanceRef) -> str | None:
         """Get the class name of the connected device matching instance, if any."""
-        return next(
-            (
-                device.class_name
-                for device in self._device_manager.connected_devices
-                if device.instance == instance
-            ),
-            None,
-        )
+        device = self._device_manager.devices.get(instance, None)
+        if not device or device.state != ConnectionStatus.CONNECTED:
+            return None
+
+        return device.args.class_name
 
     def _on_device_list(
         self, device_types: Mapping[DeviceBaseTypeInfo, Sequence[DeviceTypeInfo]]

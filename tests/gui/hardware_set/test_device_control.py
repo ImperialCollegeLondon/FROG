@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from frog.device_info import DeviceBaseTypeInfo, DeviceInstanceRef, DeviceTypeInfo
-from frog.gui.hardware_set.device import ConnectionStatus, OpenDeviceArgs
+from frog.gui.hardware_set.device import (
+    ActiveDeviceProperties,
+    ConnectionStatus,
+    OpenDeviceArgs,
+)
 from frog.gui.hardware_set.device_view import DeviceControl
 
 CONNECTED_DEVICES = (
@@ -22,7 +26,10 @@ CONNECTED_DEVICES = (
 def widget(sendmsg_mock: MagicMock, subscribe_mock: Mock, qtbot) -> DeviceControl:
     """Return a DeviceControl fixture."""
     device_manager = MagicMock()
-    device_manager.connected_devices = CONNECTED_DEVICES
+    device_manager.devices = {
+        dev.instance: ActiveDeviceProperties(dev, ConnectionStatus.CONNECTED)
+        for dev in CONNECTED_DEVICES
+    }
     return DeviceControl(device_manager)
 
 
