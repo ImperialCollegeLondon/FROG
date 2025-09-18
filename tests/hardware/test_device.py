@@ -19,6 +19,8 @@ from frog.hardware.plugins import __name__ as plugins_name
 MOCK_DEVICE_TOPIC = "mock"
 
 
+# For some reason, mypy isn't happy with the kwargs for the classes below
+# mypy: disable-error-code=call-arg
 class _MockBaseClass(Device, name=MOCK_DEVICE_TOPIC, description="Mock base class"):
     pass
 
@@ -310,7 +312,7 @@ def test_device_ignored_class():
 
             class IgnoredMockClass(_MockBaseClass):
                 @abstractmethod
-                def some_method():
+                def some_method(self):
                     pass
 
             init_base_mock.assert_not_called()
