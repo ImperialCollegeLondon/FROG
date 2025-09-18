@@ -365,7 +365,7 @@ class DeviceControl(QGroupBox):
         return next(
             (
                 device.class_name
-                for device in self._device_manager.get_connected_devices()
+                for device in self._device_manager.connected_devices
                 if device.instance == instance
             ),
             None,

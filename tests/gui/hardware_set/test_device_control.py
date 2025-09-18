@@ -22,7 +22,7 @@ CONNECTED_DEVICES = (
 def widget(sendmsg_mock: MagicMock, subscribe_mock: Mock, qtbot) -> DeviceControl:
     """Return a DeviceControl fixture."""
     device_manager = MagicMock()
-    device_manager.get_connected_devices.return_value = CONNECTED_DEVICES
+    device_manager.connected_devices = CONNECTED_DEVICES
     return DeviceControl(device_manager)
 
 

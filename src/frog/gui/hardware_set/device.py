@@ -97,17 +97,19 @@ class ActiveDeviceManager(QObject):
         pub.subscribe(self._on_device_closed, "device.closed")
         pub.subscribe(self._on_device_error, "device.error")
 
-    def get_connected_devices(self) -> Iterable[OpenDeviceArgs]:
-        """Get active devices which are connected (not connecting)."""
+    @property
+    def devices(self) -> Mapping[DeviceInstanceRef, ActiveDeviceProperties]:
+        """The current active devices."""
+        return self._active_devices
+
+    @property
+    def connected_devices(self) -> Iterable[OpenDeviceArgs]:
+        """Active devices which are connected (not connecting)."""
         return (
             props.args
             for props in self._active_devices.values()
             if props.state == ConnectionStatus.CONNECTED
         )
-
-    def get_active_devices(self) -> Mapping[DeviceInstanceRef, ActiveDeviceProperties]:
-        """Get the current active devices."""
-        return self._active_devices
 
     def disconnect_all(self) -> None:
         """Disconnect from all devices."""

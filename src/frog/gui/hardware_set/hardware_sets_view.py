@@ -134,7 +134,7 @@ class ManageDevicesDialog(QDialog):
         if name := HardwareSetNameDialog(self).show_and_get_name():
             # Create a hardware set from the currently connected devices
             hw_set = HardwareSet.from_devices(
-                name, self._device_manager.get_connected_devices()
+                name, self._device_manager.connected_devices
             )
 
             # Save it and add to the list of hardware sets displayed in the GUI
@@ -150,7 +150,7 @@ class ManageDevicesDialog(QDialog):
         don't count) and disabled otherwise.
         """
         any_devices_connected = bool(
-            next(self._device_manager.get_connected_devices(), None)  # type: ignore
+            next(self._device_manager.connected_devices, None)  # type: ignore
         )
         self._save_btn.setEnabled(any_devices_connected)
 
@@ -233,12 +233,12 @@ class HardwareSetsControl(QGroupBox):
         """Enable or disable the connect and disconnect buttons as appropriate."""
         # Enable the "Connect" button if there are any devices left to connect for this
         # hardware set
-        connected_devices = set(self._device_manager.get_connected_devices())
+        connected_devices = set(self._device_manager.connected_devices)
         all_connected = connected_devices.issuperset(
             self._combo.current_hardware_set_devices
         )
         any_devices_connecting = len(connected_devices) < len(
-            self._device_manager.get_active_devices()
+            self._device_manager.devices
         )
         self._connect_btn.setEnabled(not any_devices_connecting and not all_connected)
 
@@ -267,7 +267,7 @@ class HardwareSetsControl(QGroupBox):
 
         # Open each of the devices in turn
         for device in self._combo.current_hardware_set_devices.difference(
-            self._device_manager.get_active_devices()
+            self._device_manager.devices
         ):
             device.open()
 
@@ -287,7 +287,7 @@ class HardwareSetsControl(QGroupBox):
 
     def _on_device_open_end(self, instance: DeviceInstanceRef, class_name: str) -> None:
         """Add instance to _connected_devices and update GUI."""
-        dev_props = self._device_manager.get_active_devices()[instance]
+        dev_props = self._device_manager.devices[instance]
 
         # Remember last opened device
         settings.setValue(f"device/type/{instance!s}", class_name)
