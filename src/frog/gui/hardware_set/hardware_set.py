@@ -15,6 +15,7 @@ from pubsub import pub
 from PySide6.QtCore import QFile
 from PySide6.QtWidgets import QMessageBox
 from schema import And, Const, Optional, Schema
+from slugify import slugify
 
 from frog.config import HARDWARE_SET_USER_PATH
 from frog.gui.error_message import show_error_message
@@ -127,6 +128,18 @@ class HardwareSet:
             for k, v in plain_data.get("devices", {}).items()
         )
         return cls(plain_data["name"], devices, file_path, built_in)
+
+    @classmethod
+    def from_devices(cls, name: str, devices: Iterable[OpenDeviceArgs]) -> HardwareSet:
+        """Save the current hardware configuration with the specified name."""
+        devices = frozenset(devices)
+
+        # We use slugify to remove chars that may not be valid for file names. Note that
+        # only the file name from this path will be used in practice (as the hardware
+        # set will be saved elsewhere)
+        file_path = Path(f"{slugify(name)}.yaml")
+
+        return cls(name, devices, file_path, built_in=False)
 
 
 def _get_new_hardware_set_path(

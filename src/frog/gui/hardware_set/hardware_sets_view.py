@@ -7,11 +7,17 @@ from pubsub import pub
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
+    QStyle,
     QVBoxLayout,
+    QWidget,
 )
 
 from frog.device_info import DeviceInstanceRef
@@ -41,6 +47,54 @@ def _get_last_selected_hardware_set() -> HardwareSet | None:
         return None
 
 
+class HardwareSetNameDialog(QDialog):
+    """A dialog for choosing a name for a new hardware set."""
+
+    def __init__(self, parent: QWidget) -> None:
+        """Create a new HardwareSetNameDialog."""
+        super().__init__(parent)
+        self.setWindowTitle("Hardware set name")
+
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Name for new hardware set:"), 0, 0)
+
+        self._name_widget = QLineEdit()
+        self._name_widget.setMinimumSize(200, self._name_widget.minimumHeight())
+        layout.addWidget(self._name_widget, 0, 1)
+
+        btn_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        btn_box.accepted.connect(self.accept)
+        btn_box.rejected.connect(self.reject)
+        layout.addWidget(btn_box)
+
+        self.setLayout(layout)
+
+    def show_and_get_name(self) -> str | None:
+        """Show the dialog and try to get the name chosen.
+
+        If the user closes the dialog, None is returned.
+        """
+        while True:
+            accepted = self.exec()
+            if not accepted:
+                # User cancelled
+                return None
+
+            name = self._name_widget.text().strip()
+            if name:
+                # Valid name chosen
+                return name
+
+            msgbox = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "No name provided",
+                "You must provide a name for the hardware set",
+            )
+            msgbox.exec()
+
+
 class ManageDevicesDialog(QDialog):
     """A dialog for manually opening, closing and configuring devices."""
 
@@ -50,10 +104,21 @@ class ManageDevicesDialog(QDialog):
         self.setWindowTitle("Manage devices")
         self.setModal(True)
 
+        device_manager.device_opened.connect(self._update_save_button_state)
+        device_manager.device_closed.connect(self._update_save_button_state)
+        self._device_manager = device_manager
+
         layout = QVBoxLayout()
         layout.addWidget(DeviceControl(device_manager))
 
+        self._save_btn = QPushButton("Save")
+        self._save_btn.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)
+        )
+        self._save_btn.clicked.connect(self._save_hardware_set)
+
         buttonbox = QDialogButtonBox()
+        buttonbox.addButton(self._save_btn, QDialogButtonBox.ButtonRole.ActionRole)
         buttonbox.addButton(
             QPushButton("Close"), QDialogButtonBox.ButtonRole.RejectRole
         )
@@ -61,6 +126,33 @@ class ManageDevicesDialog(QDialog):
         layout.addWidget(buttonbox)
 
         self.setLayout(layout)
+
+        self._update_save_button_state()
+
+    def _save_hardware_set(self) -> None:
+        """Save the device manager's current state as a new hardware set."""
+        if name := HardwareSetNameDialog(self).show_and_get_name():
+            # Create a hardware set from the currently connected devices
+            hw_set = HardwareSet.from_devices(
+                name, self._device_manager.get_connected_devices()
+            )
+
+            # Save it and add to the list of hardware sets displayed in the GUI
+            pub.sendMessage("hardware_set.add", hw_set=hw_set)
+
+            # Close this dialog
+            self.accept()
+
+    def _update_save_button_state(self) -> None:
+        """Enable/disable the save button.
+
+        The button will be enabled if any devices are connected (connecting devices
+        don't count) and disabled otherwise.
+        """
+        any_devices_connected = bool(
+            next(self._device_manager.get_connected_devices(), None)  # type: ignore
+        )
+        self._save_btn.setEnabled(any_devices_connected)
 
 
 class HardwareSetsControl(QGroupBox):
