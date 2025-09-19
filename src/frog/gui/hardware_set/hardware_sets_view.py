@@ -53,10 +53,10 @@ class HardwareSetNameDialog(QDialog):
     def __init__(self, parent: QWidget) -> None:
         """Create a new HardwareSetNameDialog."""
         super().__init__(parent)
-        self.setWindowTitle("Hardware set name")
+        self.setWindowTitle("Device configuration name")
 
         layout = QGridLayout()
-        layout.addWidget(QLabel("Name for new hardware set:"), 0, 0)
+        layout.addWidget(QLabel("Name for device configuration:"), 0, 0)
 
         self._name_widget = QLineEdit()
         self._name_widget.setMinimumSize(200, self._name_widget.minimumHeight())
@@ -90,7 +90,7 @@ class HardwareSetNameDialog(QDialog):
             msgbox = QMessageBox(
                 QMessageBox.Icon.Critical,
                 "No name provided",
-                "You must provide a name for the hardware set",
+                "You must provide a name for the device configuration",
             )
             msgbox.exec()
 
@@ -163,7 +163,7 @@ class HardwareSetsControl(QGroupBox):
         device_manager: ActiveDeviceManager | None = None,
     ) -> None:
         """Create a new HardwareSetsControl."""
-        super().__init__("Hardware set")
+        super().__init__("Devices")
 
         if not device_manager:
             device_manager = ActiveDeviceManager()

@@ -15,7 +15,7 @@ class HardwareSetsMenu(QMenu):
 
     def __init__(self) -> None:
         """Create a new HardwareSetsMenu."""
-        super().__init__("Hardware sets")
+        super().__init__("Devices")
 
         import_action = QAction("Import from file", self)
         import_action.triggered.connect(self._import_hardware_set)
@@ -24,7 +24,7 @@ class HardwareSetsMenu(QMenu):
     def _import_hardware_set(self) -> None:
         """Import a hardware set from a file."""
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "Import hardware set config file", filter="*.yaml"
+            self, "Import device configuration file", filter="*.yaml"
         )
         if not file_path:
             return
@@ -34,8 +34,9 @@ class HardwareSetsMenu(QMenu):
         except Exception:
             show_error_message(
                 self,
-                "Could not load hardware set config file. Is it in the correct format?",
-                "Could not load config file",
+                "Could not load device configuration file. "
+                "Is it in the correct format?",
+                "Could not load device configuration",
             )
         else:
             pub.sendMessage("hardware_set.add", hw_set=hw_set)
