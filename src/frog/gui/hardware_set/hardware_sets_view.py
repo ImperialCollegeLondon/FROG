@@ -111,7 +111,7 @@ class ManageDevicesDialog(QDialog):
         layout = QVBoxLayout()
         layout.addWidget(DeviceControl(device_manager))
 
-        self._save_btn = QPushButton("Save")
+        self._save_btn = QPushButton("Save device configuration")
         self._save_btn.setIcon(
             self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)
         )
