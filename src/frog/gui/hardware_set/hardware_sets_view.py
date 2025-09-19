@@ -1,25 +1,27 @@
 """Provides a panel for choosing between hardware sets and (dis)connecting."""
 
-from collections.abc import Mapping, Set
-from dataclasses import dataclass
-from pathlib import Path
+from collections.abc import Mapping
 from typing import Any, cast
 
-from frozendict import frozendict
 from pubsub import pub
 from PySide6.QtWidgets import (
     QDialog,
-    QFileDialog,
+    QDialogButtonBox,
+    QGridLayout,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
+    QStyle,
     QVBoxLayout,
+    QWidget,
 )
 
 from frog.device_info import DeviceInstanceRef
-from frog.gui.error_message import show_error_message
-from frog.gui.hardware_set.device import ConnectionStatus, OpenDeviceArgs
+from frog.gui.hardware_set.device import ActiveDeviceManager
 from frog.gui.hardware_set.device_view import DeviceControl
 from frog.gui.hardware_set.hardware_set import (
     HardwareSet,
@@ -27,23 +29,6 @@ from frog.gui.hardware_set.hardware_set import (
 )
 from frog.gui.hardware_set.hardware_sets_combo_box import HardwareSetsComboBox
 from frog.settings import settings
-
-
-@dataclass
-class ActiveDeviceProperties:
-    """The properties of a device that is connecting or connected."""
-
-    args: OpenDeviceArgs
-    """Arguments used to open the device."""
-    state: ConnectionStatus
-    """Whether the device is connecting or connected."""
-
-    def __post_init__(self) -> None:
-        """Check whether user attempted to create for a disconnected device."""
-        if self.state == ConnectionStatus.DISCONNECTED:
-            raise ValueError(
-                "Cannot create ActiveDeviceProperties for disconnected device"
-            )
 
 
 def _get_last_selected_hardware_set() -> HardwareSet | None:
@@ -62,36 +47,127 @@ def _get_last_selected_hardware_set() -> HardwareSet | None:
         return None
 
 
+class HardwareSetNameDialog(QDialog):
+    """A dialog for choosing a name for a new hardware set."""
+
+    def __init__(self, parent: QWidget) -> None:
+        """Create a new HardwareSetNameDialog."""
+        super().__init__(parent)
+        self.setWindowTitle("Device configuration name")
+
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Name for device configuration:"), 0, 0)
+
+        self._name_widget = QLineEdit()
+        self._name_widget.setMinimumSize(200, self._name_widget.minimumHeight())
+        layout.addWidget(self._name_widget, 0, 1)
+
+        btn_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        btn_box.accepted.connect(self.accept)
+        btn_box.rejected.connect(self.reject)
+        layout.addWidget(btn_box, 1, 0, 1, 2)
+
+        self.setLayout(layout)
+
+    def show_and_get_name(self) -> str | None:
+        """Show the dialog and try to get the name chosen.
+
+        If the user closes the dialog, None is returned.
+        """
+        while True:
+            accepted = self.exec()
+            if not accepted:
+                # User cancelled
+                return None
+
+            name = self._name_widget.text().strip()
+            if name:
+                # Valid name chosen
+                return name
+
+            msgbox = QMessageBox(
+                QMessageBox.Icon.Critical,
+                "No name provided",
+                "You must provide a name for the device configuration",
+            )
+            msgbox.exec()
+
+
 class ManageDevicesDialog(QDialog):
     """A dialog for manually opening, closing and configuring devices."""
 
-    def __init__(self, connected_devices: Set[OpenDeviceArgs]) -> None:
-        """Create a new ManageDevicesDialog.
-
-        Args:
-            connected_devices: Which devices are already connected
-        """
+    def __init__(self, device_manager: ActiveDeviceManager) -> None:
+        """Create a new ManageDevicesDialog."""
         super().__init__()
         self.setWindowTitle("Manage devices")
         self.setModal(True)
 
+        device_manager.device_opened.connect(self._update_save_button_state)
+        device_manager.device_closed.connect(self._update_save_button_state)
+        self._device_manager = device_manager
+
         layout = QVBoxLayout()
-        layout.addWidget(DeviceControl(connected_devices))
+        layout.addWidget(DeviceControl(device_manager))
+
+        self._save_btn = QPushButton("Save device configuration")
+        self._save_btn.setIcon(
+            self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)
+        )
+        self._save_btn.clicked.connect(self._save_hardware_set)
+
+        buttonbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttonbox.addButton(self._save_btn, QDialogButtonBox.ButtonRole.ActionRole)
+        buttonbox.accepted.connect(self.accept)
+        layout.addWidget(buttonbox)
+
         self.setLayout(layout)
+
+        self._update_save_button_state()
+
+    def _save_hardware_set(self) -> None:
+        """Save the device manager's current state as a new hardware set."""
+        if name := HardwareSetNameDialog(self).show_and_get_name():
+            # Create a hardware set from the currently connected devices
+            hw_set = HardwareSet.from_devices(
+                name, self._device_manager.connected_devices
+            )
+
+            # Save it and add to the list of hardware sets displayed in the GUI
+            pub.sendMessage("hardware_set.add", hw_set=hw_set)
+
+            # Close this dialog
+            self.accept()
+
+    def _update_save_button_state(self) -> None:
+        """Enable/disable the save button.
+
+        The button will be enabled if any devices are connected (connecting devices
+        don't count) and disabled otherwise.
+        """
+        any_devices_connected = bool(
+            next(self._device_manager.connected_devices, None)  # type: ignore
+        )
+        self._save_btn.setEnabled(any_devices_connected)
 
 
 class HardwareSetsControl(QGroupBox):
     """A panel for choosing between hardware sets and (dis)connecting."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        device_manager: ActiveDeviceManager | None = None,
+    ) -> None:
         """Create a new HardwareSetsControl."""
-        super().__init__("Hardware set")
+        super().__init__("Devices")
 
-        self._active_devices: dict[DeviceInstanceRef, ActiveDeviceProperties] = {}
-        pub.subscribe(self._on_device_open_start, "device.before_opening")
-        pub.subscribe(self._on_device_open_end, "device.after_opening")
-        pub.subscribe(self._on_device_closed, "device.closed")
-        pub.subscribe(self._on_device_error, "device.error")
+        if not device_manager:
+            device_manager = ActiveDeviceManager()
+        device_manager.device_started_open.connect(self._on_device_open_start)
+        device_manager.device_opened.connect(self._on_device_open_end)
+        device_manager.device_closed.connect(self._on_device_closed)
+        self._device_manager = device_manager
 
         self._combo = HardwareSetsComboBox()
         """A combo box for the different hardware sets."""
@@ -112,9 +188,6 @@ class HardwareSetsControl(QGroupBox):
         )
         self._disconnect_btn.pressed.connect(self._on_disconnect_btn_pressed)
 
-        import_hw_set_btn = QPushButton("Import config")
-        import_hw_set_btn.pressed.connect(self._import_hardware_set)
-
         self._remove_hw_set_btn = QPushButton("Remove")
         self._remove_hw_set_btn.pressed.connect(self._remove_current_hardware_set)
 
@@ -127,7 +200,6 @@ class HardwareSetsControl(QGroupBox):
         row1.addWidget(self._connect_btn)
         row1.addWidget(self._disconnect_btn)
         row2 = QHBoxLayout()
-        row2.addWidget(import_hw_set_btn)
         row2.addWidget(self._remove_hw_set_btn)
         row2.addWidget(manage_devices_btn)
 
@@ -140,33 +212,6 @@ class HardwareSetsControl(QGroupBox):
 
         self._combo.currentIndexChanged.connect(self._update_control_state)
 
-    def _get_connected_devices(self) -> set[OpenDeviceArgs]:
-        """Get active devices which are connected (not connecting)."""
-        return set(
-            props.args
-            for props in self._active_devices.values()
-            if props.state == ConnectionStatus.CONNECTED
-        )
-
-    def _import_hardware_set(self) -> None:
-        """Import a hardware set from a file."""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "Import hardware set config file", filter="*.yaml"
-        )
-        if not file_path:
-            return
-
-        try:
-            hw_set = HardwareSet.load(Path(file_path))
-        except Exception:
-            show_error_message(
-                self,
-                "Could not load hardware set config file. Is it in the correct format?",
-                "Could not load config file",
-            )
-        else:
-            pub.sendMessage("hardware_set.add", hw_set=hw_set)
-
     def _remove_current_hardware_set(self) -> None:
         """Remove the currently selected hardware set."""
         pub.sendMessage("hardware_set.remove", hw_set=self._combo.current_hardware_set)
@@ -177,9 +222,7 @@ class HardwareSetsControl(QGroupBox):
         The dialog is created lazily.
         """
         if not hasattr(self, "_manage_devices_dialog"):
-            self._manage_devices_dialog = ManageDevicesDialog(
-                self._get_connected_devices()
-            )
+            self._manage_devices_dialog = ManageDevicesDialog(self._device_manager)
 
         self._manage_devices_dialog.show()
 
@@ -187,11 +230,13 @@ class HardwareSetsControl(QGroupBox):
         """Enable or disable the connect and disconnect buttons as appropriate."""
         # Enable the "Connect" button if there are any devices left to connect for this
         # hardware set
-        connected_devices = self._get_connected_devices()
+        connected_devices = set(self._device_manager.connected_devices)
         all_connected = connected_devices.issuperset(
             self._combo.current_hardware_set_devices
         )
-        any_devices_connecting = len(connected_devices) < len(self._active_devices)
+        any_devices_connecting = len(connected_devices) < len(
+            self._device_manager.devices
+        )
         self._connect_btn.setEnabled(not any_devices_connecting and not all_connected)
 
         # Enable the "Disconnect all" button if there are *any* devices connected at all
@@ -219,35 +264,27 @@ class HardwareSetsControl(QGroupBox):
 
         # Open each of the devices in turn
         for device in self._combo.current_hardware_set_devices.difference(
-            self._active_devices
+            self._device_manager.devices
         ):
             device.open()
-
-        self._update_control_state()
-
-    def _on_disconnect_btn_pressed(self) -> None:
-        """Disconnect from all devices in current hardware set."""
-        # We need to make a copy because keys will be removed as we close devices
-        for device in list(self._active_devices.keys()):
-            pub.sendMessage("device.close", instance=device)
-
-        self._update_control_state()
 
     def _on_device_open_start(
         self, instance: DeviceInstanceRef, class_name: str, params: Mapping[str, Any]
     ) -> None:
-        """Store device open parameters and update GUI."""
-        args = OpenDeviceArgs(instance, class_name, frozendict(params))
-        dev_props = ActiveDeviceProperties(args, ConnectionStatus.CONNECTING)
-        self._active_devices[instance] = dev_props
-
+        """Update GUI."""
         self._update_control_state()
+
+    def _on_device_closed(self, instance: DeviceInstanceRef) -> None:
+        """Update GUI."""
+        self._update_control_state()
+
+    def _on_disconnect_btn_pressed(self) -> None:
+        """Disconnect from all devices in current hardware set."""
+        self._device_manager.disconnect_all()
 
     def _on_device_open_end(self, instance: DeviceInstanceRef, class_name: str) -> None:
         """Add instance to _connected_devices and update GUI."""
-        dev_props = self._active_devices[instance]
-        dev_props.state = ConnectionStatus.CONNECTED
-        assert dev_props.args.class_name == class_name
+        dev_props = self._device_manager.devices[instance]
 
         # Remember last opened device
         settings.setValue(f"device/type/{instance!s}", class_name)
@@ -255,28 +292,3 @@ class HardwareSetsControl(QGroupBox):
             settings.setValue(f"device/params/{class_name}", dev_props.args.params)
 
         self._update_control_state()
-
-    def _on_device_closed(self, instance: DeviceInstanceRef) -> None:
-        """Remove instance from _connected devices and update GUI."""
-        try:
-            # Remove the device matching this instance type (there should be only one)
-            del self._active_devices[instance]
-        except KeyError:
-            # No device of this type found
-            pass
-        else:
-            self._update_control_state()
-
-    def _on_device_error(
-        self, instance: DeviceInstanceRef, error: BaseException
-    ) -> None:
-        """Show an error message when something has gone wrong with the device.
-
-        Todo:
-            The name of the device isn't currently very human readable.
-        """
-        show_error_message(
-            self,
-            f"A fatal error has occurred with the {instance!s} device: {error!s}",
-            title="Device error",
-        )

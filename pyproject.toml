@@ -27,6 +27,7 @@ dependencies = [
     "frozendict<3.0.0,>=2.4.6",
     "crc<8.0.0,>=7.1.0",
     "ntplib<1.0.0,>=0.4.0",
+    "python-slugify>=8.0.4",
 ]
 
 [dependency-groups]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping, Sequence, Set
+from collections.abc import Mapping, Sequence
 from typing import Any, cast
 
 from pubsub import pub
@@ -22,8 +22,8 @@ from PySide6.QtWidgets import (
 from frog.device_info import DeviceBaseTypeInfo, DeviceInstanceRef, DeviceTypeInfo
 from frog.gui.error_message import show_error_message
 from frog.gui.hardware_set.device import (
+    ActiveDeviceManager,
     ConnectionStatus,
-    OpenDeviceArgs,
     close_device,
     open_device,
 )
@@ -349,13 +349,12 @@ class DeviceTypeControl(QGroupBox):
 class DeviceControl(QGroupBox):
     """Allows for viewing and connecting to devices."""
 
-    def __init__(self, connected_devices: Set[OpenDeviceArgs]) -> None:
+    def __init__(self, device_manager: ActiveDeviceManager) -> None:
         """Create a new DeviceControl."""
         super().__init__("Device control")
+        self._device_manager = device_manager
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         self.setLayout(QVBoxLayout())
-        self._connected_devices = connected_devices
-        """The devices already connected when the control is created."""
 
         # Retrieve the list of device plugins
         pub.subscribe(self._on_device_list, "device.list.response")
@@ -363,14 +362,11 @@ class DeviceControl(QGroupBox):
 
     def _get_connected_device(self, instance: DeviceInstanceRef) -> str | None:
         """Get the class name of the connected device matching instance, if any."""
-        return next(
-            (
-                device.class_name
-                for device in self._connected_devices
-                if device.instance == instance
-            ),
-            None,
-        )
+        device = self._device_manager.devices.get(instance, None)
+        if not device or device.state != ConnectionStatus.CONNECTED:
+            return None
+
+        return device.args.class_name
 
     def _on_device_list(
         self, device_types: Mapping[DeviceBaseTypeInfo, Sequence[DeviceTypeInfo]]

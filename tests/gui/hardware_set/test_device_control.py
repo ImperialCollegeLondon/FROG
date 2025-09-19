@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from frog.device_info import DeviceBaseTypeInfo, DeviceInstanceRef, DeviceTypeInfo
-from frog.gui.hardware_set.device import ConnectionStatus, OpenDeviceArgs
+from frog.gui.hardware_set.device import (
+    ActiveDeviceProperties,
+    ConnectionStatus,
+    OpenDeviceArgs,
+)
 from frog.gui.hardware_set.device_view import DeviceControl
 
 CONNECTED_DEVICES = (
@@ -21,14 +25,19 @@ CONNECTED_DEVICES = (
 @pytest.fixture
 def widget(sendmsg_mock: MagicMock, subscribe_mock: Mock, qtbot) -> DeviceControl:
     """Return a DeviceControl fixture."""
-    return DeviceControl(set(CONNECTED_DEVICES))
+    device_manager = MagicMock()
+    device_manager.devices = {
+        dev.instance: ActiveDeviceProperties(dev, ConnectionStatus.CONNECTED)
+        for dev in CONNECTED_DEVICES
+    }
+    return DeviceControl(device_manager)
 
 
 def test_init(sendmsg_mock: MagicMock, subscribe_mock: MagicMock, qtbot) -> None:
     """Test the constructor."""
-    devices = MagicMock()
-    widget = DeviceControl(devices)
-    assert widget._connected_devices is devices
+    device_manager = MagicMock()
+    widget = DeviceControl(device_manager)
+    assert widget._device_manager is device_manager
 
     # Check that the list of devices was requested and the response is listened for
     subscribe_mock.assert_called_once_with(
