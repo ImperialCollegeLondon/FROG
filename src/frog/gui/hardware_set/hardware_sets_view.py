@@ -67,7 +67,7 @@ class HardwareSetNameDialog(QDialog):
         )
         btn_box.accepted.connect(self.accept)
         btn_box.rejected.connect(self.reject)
-        layout.addWidget(btn_box)
+        layout.addWidget(btn_box, 1, 0, 1, 2)
 
         self.setLayout(layout)
 
