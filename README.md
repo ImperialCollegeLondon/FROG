@@ -85,5 +85,5 @@ To get started:
    1. Install [pandoc](https://pandoc.org/installing.html)
 
    1. ```bash
-      docs/gen_user_guide.py
+      python docs/gen_user_guide.py
       ```
