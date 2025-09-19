@@ -117,12 +117,9 @@ class ManageDevicesDialog(QDialog):
         )
         self._save_btn.clicked.connect(self._save_hardware_set)
 
-        buttonbox = QDialogButtonBox()
+        buttonbox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttonbox.addButton(self._save_btn, QDialogButtonBox.ButtonRole.ActionRole)
-        buttonbox.addButton(
-            QPushButton("Close"), QDialogButtonBox.ButtonRole.RejectRole
-        )
-        buttonbox.rejected.connect(self.reject)
+        buttonbox.accepted.connect(self.accept)
         layout.addWidget(buttonbox)
 
         self.setLayout(layout)
