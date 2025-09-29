@@ -45,6 +45,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "jamesturner246",
+      "name": "James Paul Turner",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6853046?v=4",
+      "profile": "https://www.imperial.ac.uk/research-software-engineering",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
