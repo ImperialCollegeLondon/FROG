@@ -1,0 +1,70 @@
+{
+  "projectName": "FROG",
+  "projectOwner": "ImperialCollegeLondon",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "gitmoji",
+  "contributors": [
+    {
+      "login": "alexdewar",
+      "name": "Alex Dewar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23149834?v=4",
+      "profile": "https://www.imperial.ac.uk/admin-services/ict/self-service/research-support/rcs/service-offering/research-software-engineering/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "dc2917",
+      "name": "Dan Cummins",
+      "avatar_url": "https://avatars.githubusercontent.com/u/45606273?v=4",
+      "profile": "https://dc2917.github.io/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "CWestICL",
+      "name": "CWestICL",
+      "avatar_url": "https://avatars.githubusercontent.com/u/108276827?v=4",
+      "profile": "https://github.com/CWestICL",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "dalonsoa",
+      "name": "Diego Alonso Álvarez",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6095790?v=4",
+      "profile": "https://www.imperial.ac.uk/admin-services/ict/self-service/research-support/rcs/service-offering/research-software-engineering/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jamesturner246",
+      "name": "James Paul Turner",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6853046?v=4",
+      "profile": "https://www.imperial.ac.uk/research-software-engineering",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "jonemurray",
+      "name": "jonemurray",
+      "avatar_url": "https://avatars.githubusercontent.com/u/116724201?v=4",
+      "profile": "https://github.com/jonemurray",
+      "contributions": [
+        "ideas"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "linkToUsage": true
+}
