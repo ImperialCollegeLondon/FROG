@@ -64,7 +64,7 @@ To get started:
 1. Install the git hooks:
 
    ```bash
-   pre-commit install
+   uv run pre-commit install
    ```
 
 1. **Optional:** [Activate your virtual
