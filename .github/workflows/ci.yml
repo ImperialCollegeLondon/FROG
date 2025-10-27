@@ -44,7 +44,7 @@ jobs:
         if: runner.os == 'Windows'
         uses: ./.github/actions/build-win-exe
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: runner.os == 'Windows' && success()
         with:
           name: FROG
