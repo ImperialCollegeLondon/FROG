@@ -14,7 +14,7 @@ block_cipher = None
 gen_guide.generate_html()
 
 a = Analysis(
-    ["stub.py"],
+    ["frog/__main__.py"],
     pathex=[],
     binaries=[],
     datas=[
