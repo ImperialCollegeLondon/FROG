@@ -102,10 +102,10 @@ def parse_script(script: str | TextIOBase) -> dict[str, Any]:
     Raises:
         ParseError: The script's contents were invalid
     """
-    valid_float = And(float, lambda f: 0.0 <= f < 360.0)
-    valid_preset = And(str, lambda s: s in ANGLE_PRESETS)
-    measurements_type = And(int, lambda x: x > 0)
-    nonempty_list = And(list, lambda x: x)
+    valid_float: Any = And(float, lambda f: 0.0 <= f < 360.0)
+    valid_preset: Any = And(str, lambda s: s in ANGLE_PRESETS)
+    measurements_type: Any = And(int, lambda x: x > 0)
+    nonempty_list: Any = And(list, lambda x: x)
 
     schema = Schema(
         {
