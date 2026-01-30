@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - uses: ./.github/actions/build-win-exe
 
       - name: Upload release artifacts

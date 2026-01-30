@@ -10,7 +10,7 @@ authors = [
     { name = "James Turner", email = "james.turner@imperial.ac.uk" },
     { name = "Imperial College London RSE Team", email = "ict-rse-team@imperial.ac.uk" },
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "PySide6<7.0.0,>=6.9.0",
     "matplotlib<4.0.0,>=3.10.1",
@@ -62,7 +62,7 @@ requires = ["uv_build>=0.8.3,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 lint.select = [
     "D",   # pydocstyle
     "E",   # pycodestyle
