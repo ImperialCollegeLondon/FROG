@@ -966,11 +966,11 @@ wheels = [
 
 [[package]]
 name = "pypubsub"
-version = "4.0.3"
+version = "4.0.7"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/23/64/e7907a632cfbd76fd17e86ed6279422345958cf9fdc8216d95d13d9fee1b/pypubsub-4.0.3.tar.gz", hash = "sha256:32d662de3ade0fb0880da92df209c62a4803684de5ccb8d19421c92747a258c7", size = 49524, upload-time = "2025-07-21T11:48:14.001Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/ae/873ab0911ba6ae395f05a788cd509af4ade15585740e1f0bc7673775f469/pypubsub-4.0.7.tar.gz", hash = "sha256:ec8b5cb147624958320e992602380cc5d0e4b36b1c59844d05e425a3003c09dc", size = 179165, upload-time = "2025-12-08T05:35:21.402Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1a/41/a0aceb552d8ec63bb1e8223d130f9dd0f736470036d75d708183b104a2cb/Pypubsub-4.0.3-py3-none-any.whl", hash = "sha256:7f716bae9388afe01ff82b264ba8a96a8ae78b42bb1f114f2716ca8f9e404e2a", size = 61368, upload-time = "2019-01-28T00:36:11.389Z" },
+    { url = "https://files.pythonhosted.org/packages/47/bf/17587e7cdefbf66cb3f0bced126c11a6d4c0b9b78a3eb90bbd0a49963d58/pypubsub-4.0.7-py3-none-any.whl", hash = "sha256:89c3e274e634fea19de881bb45152815d9c1aaa0120215f85200ba56843372f4", size = 72280, upload-time = "2025-12-08T05:35:20.439Z" },
 ]
 
 [[package]]
