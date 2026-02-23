@@ -330,6 +330,14 @@ def test_check_model_id(dev: ST10Controller) -> None:
     with read_mock(dev, "107F024"):
         dev._check_model_id()
 
+    # Check with the correct ID, different firmware version
+    with read_mock(dev, "ABAB024"):
+        dev._check_model_id()
+
+    # Check with the correct ID, ignored sub-model ID
+    with read_mock(dev, "107F024C"):
+        dev._check_model_id()
+
     # Check with an invalid ID
     with read_mock(dev, "hello"):
         with pytest.raises(ST10ControllerError):

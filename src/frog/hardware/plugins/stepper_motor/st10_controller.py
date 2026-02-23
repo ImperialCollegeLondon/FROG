@@ -183,8 +183,8 @@ class ST10Controller(
     STEPS_PER_ROTATION = 50800
     """The total number of steps in one full rotation of the mirror."""
 
-    ST10_MODEL_ID = "107F024"
-    """The model and revision number for the ST10 controller we are using."""
+    ST10_MODEL_ID = "024"
+    """The model ID for the ST10 controller we are using."""
 
     def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0) -> None:
         """Create a new ST10Controller.
@@ -283,8 +283,17 @@ class ST10Controller(
         """
         # Request model and revision
         self._write("MV")
-        if self._read_sync() != self.ST10_MODEL_ID:
+
+        # The string is composed of firmware version, model ID (and possible sub-model
+        # code, which we ignore)
+        id_str = self._read_sync()
+        firmware_version = id_str[:4]
+        model_id = id_str[4:7]
+
+        if model_id != self.ST10_MODEL_ID:
             raise ST10ControllerError("Device ID indicates this is not an ST10")
+
+        logging.info(f"ST10 firmware version: {firmware_version}")
 
     def _disable_limit_switches(self) -> None:
         """Disable the limit switches on the controller.
