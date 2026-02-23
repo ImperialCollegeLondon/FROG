@@ -1,6 +1,6 @@
 """Code for interfacing with the ST10-Q-NN stepper motor controller.
 
-Applied Motions have their own bespoke programming language ("Q") for interfacing with
+Applied Motion have their own bespoke programming language ("Q") for interfacing with
 their devices, of which we're only using a small portion here.
 
 The specification is available online:
