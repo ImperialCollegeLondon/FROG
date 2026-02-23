@@ -186,6 +186,9 @@ class ST10Controller(
     ST10_MODEL_ID = "024"
     """The model ID for the ST10 controller we are using."""
 
+    HOME_SWITCH_INPUT = 6
+    """The input number for the home switch."""
+
     def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0) -> None:
         """Create a new ST10Controller.
 
@@ -346,12 +349,12 @@ class ST10Controller(
         self.stop_moving()
 
         # If the homing switch is already active, move the motor a bit
-        if self._get_input_status(6):
+        if self._get_input_status(self.HOME_SWITCH_INPUT):
             self._relative_move(-5000)
 
         # Home the motor, leaving mirror facing upwards. The command means "seek home
-        # until input 6 is high" (the input is an optoswitch).
-        self._write_check("SH6H")
+        # until this input is high" (the input is an optoswitch).
+        self._write_check(f"SH{self.HOME_SWITCH_INPUT}H")
 
         # Turn mirror so it's facing down
         self._relative_move(-30130)
