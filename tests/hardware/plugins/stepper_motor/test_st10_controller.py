@@ -48,7 +48,7 @@ def dev(subscribe_mock: MagicMock, serial_mock: MagicMock) -> ST10Controller:
     # These functions should all be called, but patch them for now as we test this
     # elsewhere
     with (
-        patch.object(ST10Controller, "_check_device_id"),
+        patch.object(ST10Controller, "_check_model_id"),
         patch.object(ST10Controller, "_disable_limit_switches"),
         patch.object(ST10Controller, "_home_and_reset"),
         patch.object(ST10Controller, "signal_is_opened"),
@@ -63,7 +63,7 @@ def dev(subscribe_mock: MagicMock, serial_mock: MagicMock) -> ST10Controller:
 def test_init(subscribe_mock: MagicMock, serial_mock: MagicMock) -> None:
     """Test __init__()."""
     with (
-        patch.object(ST10Controller, "_check_device_id") as check_mock,
+        patch.object(ST10Controller, "_check_model_id") as check_mock,
         patch.object(ST10Controller, "_disable_limit_switches") as limit_mock,
         patch.object(ST10Controller, "_home_and_reset") as home_mock,
     ):
@@ -324,16 +324,16 @@ def test_request_int_bad(dev: ST10Controller) -> None:
         dev._request_int("SOME_NAME")
 
 
-def test_check_device_id(dev: ST10Controller) -> None:
-    """Test the _check_device_id() method."""
+def test_check_model_id(dev: ST10Controller) -> None:
+    """Test the _check_model_id() method."""
     # Check with the correct ID
     with read_mock(dev, "107F024"):
-        dev._check_device_id()
+        dev._check_model_id()
 
     # Check with an invalid ID
     with read_mock(dev, "hello"):
         with pytest.raises(ST10ControllerError):
-            dev._check_device_id()
+            dev._check_model_id()
 
 
 def test_disable_limit_switches(dev: ST10Controller) -> None:

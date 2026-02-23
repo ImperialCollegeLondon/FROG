@@ -217,7 +217,7 @@ class ST10Controller(
         )
 
         # Check that we are connecting to an ST10
-        self._check_device_id()
+        self._check_model_id()
 
         self._disable_limit_switches()
 
@@ -273,7 +273,7 @@ class ST10Controller(
             # Move was successful
             self.send_move_end_message()
 
-    def _check_device_id(self) -> None:
+    def _check_model_id(self) -> None:
         """Check that the ID is the correct one for an ST10.
 
         Raises:
