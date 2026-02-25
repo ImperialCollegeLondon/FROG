@@ -185,6 +185,9 @@ class ST10Controller(
 
     This class allows for moving the mirror to arbitrary positions and retrieving its
     current position.
+
+    It is assumed that the optoswitch used for homing is connected to input 6 (rising
+    edge). Limit switches, if present, will be disabled.
     """
 
     STEPS_PER_ROTATION = 50800
