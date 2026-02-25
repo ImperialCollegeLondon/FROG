@@ -397,7 +397,7 @@ def test_home_and_reset(dev: ST10Controller, in_position: bool) -> None:
                             # Let's not bother checking everything as we can't ensure
                             # the sequence is correct in any case
                             status_mock.return_value = in_position
-                            dev._home_and_reset()
+                            dev._home_and_reset(0)
                             stop_mock.assert_called_once_with()
                             timer_mock.start.assert_called_once_with()
                             ss_mock.assert_called_once_with("Z")
