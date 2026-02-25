@@ -6,6 +6,7 @@ devices:
     params:
       port: "0403:6011"
       baudrate: 9600
+      timeout: 5.0
   temperature_controller.hot_bb:
     class_name: temperature.tc4820.TC4820
     params:

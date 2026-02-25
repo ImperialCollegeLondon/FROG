@@ -172,7 +172,11 @@ class _SerialReader(QThread):
 
 
 class ST10Controller(
-    SerialDevice, StepperMotorBase, description="ST10 controller", async_open=True
+    SerialDevice,
+    StepperMotorBase,
+    description="ST10 controller",
+    parameters={"timeout": "Timeout for serial connection"},
+    async_open=True,
 ):
     """An interface for the ST10-Q-NN stepper motor controller.
 
@@ -203,6 +207,9 @@ class ST10Controller(
             ST10ControllerError: Malformed message received from device
         """
         SerialDevice.__init__(self, port, baudrate)
+
+        if timeout <= 0.0:
+            raise ValueError("Timeout must be greater than zero")
 
         self._reader = _SerialReader(self.serial, timeout)
         self._reader.async_read_completed.connect(self._on_initial_move_end)
