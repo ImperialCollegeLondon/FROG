@@ -226,7 +226,7 @@ class AddButtons(QGroupBox):
         self.angle = QSpinBox()
         self.angle.setSuffix("°")
         self.angle.setMinimum(0)
-        self.angle.setMaximum(270)
+        self.angle.setMaximum(359)
         self.goto = QPushButton("GOTO")
         self.goto.clicked.connect(self._goto_clicked)
         goto_layout.addWidget(self.angle)
