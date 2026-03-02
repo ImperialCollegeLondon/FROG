@@ -217,14 +217,20 @@ def test_add_buttons(preset: str, count: int, widget: SequenceWidget) -> None:
 
 @pytest.mark.parametrize(
     "angle,count",
-    ((angle, count) for angle in (0, 1, 90, 180, 270) for count in range(1, 4)),
+    (
+        (angle, count)
+        for angle in (-90, 0, 1, 90, 180, 270, 359, 360)
+        for count in range(1, 4)
+    ),
 )
 def test_add_buttons_goto(angle: int, count: int, widget: SequenceWidget) -> None:
     """Test the GOTO button in the AddButtons panel."""
+    LIMS = (0, 359)
     buttons = AddButtons(widget)
 
     buttons.angle.setValue(angle)
     buttons.count.count.setValue(count)
     with patch.object(widget, "add_instruction") as add_mock:
         buttons.goto.click()
-        add_mock.assert_called_once_with(float(angle), count)
+        clamped_angle = max(LIMS[0], min(LIMS[1], angle))
+        add_mock.assert_called_once_with(float(clamped_angle), count)
