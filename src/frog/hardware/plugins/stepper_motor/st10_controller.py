@@ -1,6 +1,6 @@
 """Code for interfacing with the ST10-Q-NN stepper motor controller.
 
-Applied Motions have their own bespoke programming language ("Q") for interfacing with
+Applied Motion have their own bespoke programming language ("Q") for interfacing with
 their devices, of which we're only using a small portion here.
 
 The specification is available online:
@@ -172,27 +172,47 @@ class _SerialReader(QThread):
 
 
 class ST10Controller(
-    SerialDevice, StepperMotorBase, description="ST10 controller", async_open=True
+    SerialDevice,
+    StepperMotorBase,
+    description="ST10 controller",
+    parameters={
+        "timeout": "Timeout for serial connection",
+        "steps_after_home": "Number of steps to move after homing",
+    },
+    async_open=True,
 ):
     """An interface for the ST10-Q-NN stepper motor controller.
 
     This class allows for moving the mirror to arbitrary positions and retrieving its
     current position.
+
+    It is assumed that the optoswitch used for homing is connected to input 6 (rising
+    edge). Limit switches, if present, will be disabled.
     """
 
     STEPS_PER_ROTATION = 50800
     """The total number of steps in one full rotation of the mirror."""
 
-    ST10_MODEL_ID = "107F024"
-    """The model and revision number for the ST10 controller we are using."""
+    ST10_MODEL_ID = "024"
+    """The model ID for the ST10 controller we are using."""
 
-    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 5.0) -> None:
+    HOME_SWITCH_INPUT = 6
+    """The input number for the home switch."""
+
+    def __init__(
+        self,
+        port: str,
+        baudrate: int = 9600,
+        timeout: float = 5.0,
+        steps_after_home: int = 0,
+    ) -> None:
         """Create a new ST10Controller.
 
         Args:
             port: Description of USB port (vendor ID + product ID)
             baudrate: Baud rate of port
             timeout: Connection timeout
+            steps_after_home: Number of steps to move after homing
 
         Raises:
             SerialException: Error communicating with device
@@ -200,6 +220,15 @@ class ST10Controller(
             ST10ControllerError: Malformed message received from device
         """
         SerialDevice.__init__(self, port, baudrate)
+
+        if timeout <= 0.0:
+            raise ValueError("Timeout must be greater than zero")
+
+        step_limit = self.STEPS_PER_ROTATION - 1
+        if not (-step_limit <= steps_after_home <= step_limit):
+            raise ValueError(
+                f"steps_after_home must be between {-step_limit} and {step_limit}"
+            )
 
         self._reader = _SerialReader(self.serial, timeout)
         self._reader.async_read_completed.connect(self._on_initial_move_end)
@@ -217,12 +246,12 @@ class ST10Controller(
         )
 
         # Check that we are connecting to an ST10
-        self._check_device_id()
+        self._check_model_id()
 
         self._disable_limit_switches()
 
         # Move mirror to home position
-        self._home_and_reset()
+        self._home_and_reset(steps_after_home)
 
         StepperMotorBase.__init__(self)
 
@@ -273,7 +302,7 @@ class ST10Controller(
             # Move was successful
             self.send_move_end_message()
 
-    def _check_device_id(self) -> None:
+    def _check_model_id(self) -> None:
         """Check that the ID is the correct one for an ST10.
 
         Raises:
@@ -283,8 +312,17 @@ class ST10Controller(
         """
         # Request model and revision
         self._write("MV")
-        if self._read_sync() != self.ST10_MODEL_ID:
+
+        # The string is composed of firmware version, model ID (and possible sub-model
+        # code, which we ignore)
+        id_str = self._read_sync()
+        firmware_version = id_str[:4]
+        model_id = id_str[4:7]
+
+        if model_id != self.ST10_MODEL_ID:
             raise ST10ControllerError("Device ID indicates this is not an ST10")
+
+        logging.info(f"ST10 firmware version: {firmware_version}")
 
     def _disable_limit_switches(self) -> None:
         """Disable the limit switches on the controller.
@@ -325,8 +363,11 @@ class ST10Controller(
         """Get the number of steps that correspond to a full rotation."""
         return self.STEPS_PER_ROTATION
 
-    def _home_and_reset(self) -> None:
+    def _home_and_reset(self, steps_after_home: int) -> None:
         """Return the stepper motor to its home position and reset the counter.
+
+        Args:
+            steps_after_home: Number of steps to move after homing
 
         Raises:
             SerialException: Error communicating with device
@@ -337,15 +378,15 @@ class ST10Controller(
         self.stop_moving()
 
         # If the homing switch is already active, move the motor a bit
-        if self._get_input_status(6):
+        if self._get_input_status(self.HOME_SWITCH_INPUT):
             self._relative_move(-5000)
 
         # Home the motor, leaving mirror facing upwards. The command means "seek home
-        # until input 6 is high" (the input is an optoswitch).
-        self._write_check("SH6H")
+        # until this input is high" (the input is an optoswitch).
+        self._write_check(f"SH{self.HOME_SWITCH_INPUT}H")
 
         # Turn mirror so it's facing down
-        self._relative_move(-30130)
+        self._relative_move(steps_after_home)
 
         # Tell the controller that this is step 0 ("set variable SP to 0")
         self._write_check("SP0")
