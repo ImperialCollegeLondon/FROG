@@ -177,7 +177,7 @@ class ST10Controller(
     description="ST10 controller",
     parameters={
         "timeout": "Timeout for serial connection",
-        "steps_after_home": "Number of steps to move after homing",
+        "nadir_offset": "Angle of nadir relative to homing switch (degrees)",
         "hot_bb_angle": "Angle of hot black body relative to nadir (degrees)",
         "cold_bb_angle": "Angle of cold black body relative to nadir (degrees)",
     },
@@ -206,7 +206,7 @@ class ST10Controller(
         port: str,
         baudrate: int = 9600,
         timeout: float = 5.0,
-        steps_after_home: int = 0,
+        nadir_offset: float = 0.0,
         hot_bb_angle: float = 0.0,
         cold_bb_angle: float = 0.0,
     ) -> None:
@@ -216,7 +216,7 @@ class ST10Controller(
             port: Description of USB port (vendor ID + product ID)
             baudrate: Baud rate of port
             timeout: Connection timeout
-            steps_after_home: Number of steps to move after homing
+            nadir_offset: Angle of nadir relative to homing switch (degrees)
             hot_bb_angle: Angle of hot black body relative to nadir (degrees)
             cold_bb_angle: Angle of cold black body relative to nadir (degrees)
 
@@ -230,11 +230,8 @@ class ST10Controller(
         if timeout <= 0.0:
             raise ValueError("Timeout must be greater than zero")
 
-        step_limit = self.STEPS_PER_ROTATION - 1
-        if not (-step_limit <= steps_after_home <= step_limit):
-            raise ValueError(
-                f"steps_after_home must be between {-step_limit} and {step_limit}"
-            )
+        if abs(nadir_offset) >= 360.0:
+            raise ValueError("Nadir offset must be between -360° and 360˚")
 
         self._reader = _SerialReader(self.serial, timeout)
         self._reader.async_read_completed.connect(self._on_initial_move_end)
@@ -257,7 +254,7 @@ class ST10Controller(
         self._disable_limit_switches()
 
         # Move mirror to home position
-        self._home_and_reset(steps_after_home)
+        self._home_and_reset(nadir_offset)
 
         StepperMotorBase.__init__(
             self, hot_bb_angle=hot_bb_angle, cold_bb_angle=cold_bb_angle
@@ -371,11 +368,11 @@ class ST10Controller(
         """Get the number of steps that correspond to a full rotation."""
         return self.STEPS_PER_ROTATION
 
-    def _home_and_reset(self, steps_after_home: int) -> None:
+    def _home_and_reset(self, nadir_offset: float) -> None:
         """Return the stepper motor to its home position and reset the counter.
 
         Args:
-            steps_after_home: Number of steps to move after homing
+            nadir_offset: Angle of nadir relative to homing switch (degrees)
 
         Raises:
             SerialException: Error communicating with device
@@ -394,7 +391,7 @@ class ST10Controller(
         self._write_check(f"SH{self.HOME_SWITCH_INPUT}H")
 
         # Turn mirror so it's facing down
-        self._relative_move(steps_after_home)
+        self._relative_move(round(nadir_offset * self.STEPS_PER_ROTATION))
 
         # Tell the controller that this is step 0 ("set variable SP to 0")
         self._write_check("SP0")
