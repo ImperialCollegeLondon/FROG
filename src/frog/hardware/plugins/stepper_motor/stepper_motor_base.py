@@ -19,6 +19,11 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
         self.subscribe(self.move_to, "move.begin")
         self.subscribe(self.stop_moving, "stop")
 
+    def signal_is_opened(self) -> None:
+        """Signal that the device is now open."""
+        super().signal_is_opened()
+        self.send_message("angle_presets", angle_presets=ANGLE_PRESETS)
+
     @staticmethod
     def preset_angle(name: str) -> float:
         """Get the angle for one of the preset positions.
