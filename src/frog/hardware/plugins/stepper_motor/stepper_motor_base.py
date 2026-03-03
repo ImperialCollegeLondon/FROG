@@ -30,9 +30,9 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
         super().__init__()
 
         if not (0.0 <= hot_bb_angle < 360.0):
-            raise ValueError("Hot BB angle must be ≥0˚ and <360˚")
+            raise ValueError("Hot BB angle must be >= 0° and < 360°")
         if not (0.0 <= cold_bb_angle < 360.0):
-            raise ValueError("Cold BB angle must be ≥0˚ and <360˚")
+            raise ValueError("Cold BB angle must be >= 0° and < 360°")
 
         self.angle_presets = frozendict(
             **self.ANGLE_PRESET_DEFAULTS, hot_bb=hot_bb_angle, cold_bb=cold_bb_angle
