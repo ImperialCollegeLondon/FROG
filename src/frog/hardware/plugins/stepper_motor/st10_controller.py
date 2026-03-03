@@ -231,7 +231,7 @@ class ST10Controller(
             raise ValueError("Timeout must be greater than zero")
 
         if abs(nadir_offset) >= 360.0:
-            raise ValueError("Nadir offset must be between -360° and 360˚")
+            raise ValueError("Nadir offset must be strictly between -360° and 360°")
 
         self._reader = _SerialReader(self.serial, timeout)
         self._reader.async_read_completed.connect(self._on_initial_move_end)
@@ -391,7 +391,7 @@ class ST10Controller(
         self._write_check(f"SH{self.HOME_SWITCH_INPUT}H")
 
         # Turn mirror so it's facing down
-        self._relative_move(round(nadir_offset * self.STEPS_PER_ROTATION))
+        self._relative_move(round(self.STEPS_PER_ROTATION * nadir_offset / 360.0))
 
         # Tell the controller that this is step 0 ("set variable SP to 0")
         self._write_check("SP0")

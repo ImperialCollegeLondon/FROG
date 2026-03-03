@@ -93,7 +93,7 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
             try:
                 target = self.angle_presets[target]
             except KeyError:
-                raise ValueError(f"{target} not a valid angle preset")
+                raise ValueError(f'"{target}" is not a valid angle preset')
         elif target < 0.0 or target >= 360.0:
             raise ValueError("Angle must be between 0° and 360°")
 

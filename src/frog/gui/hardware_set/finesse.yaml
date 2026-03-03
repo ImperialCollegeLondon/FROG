@@ -7,7 +7,7 @@ devices:
       port: "0403:6011"
       baudrate: 9600
       timeout: 5.0
-      nadir_offset: −213.519685039
+      nadir_offset: -213.519685039
       hot_bb_angle: 270.0
       cold_bb_angle: 225.0
   temperature_controller.hot_bb:
