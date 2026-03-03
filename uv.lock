@@ -290,7 +290,7 @@ requires-dist = [
     { name = "pycsvy", specifier = ">=0.2.3,<1.0.0" },
     { name = "pypubsub", specifier = ">=4.0.3,<5.0.0" },
     { name = "pyserial", specifier = ">=3.5,<4.0" },
-    { name = "pyside6", specifier = ">=6.9.0,<7.0.0" },
+    { name = "pyside6", specifier = ">=6.9.0,<6.10.0" },
     { name = "python-slugify", specifier = ">=8.0.4" },
     { name = "python-statemachine", specifier = "~=2.3.6" },
     { name = "pyyaml", specifier = ">=6.0,<7.0" },
