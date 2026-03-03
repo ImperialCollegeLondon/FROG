@@ -79,6 +79,7 @@ def test_indicate_moving(qtbot: QtBot) -> None:
 def test_update_mirror_position_display(qtbot: QtBot) -> None:
     """Test the mirror position display updates correctly."""
     control = StepperMotorControl()
+    control._update_preset_angles(ANGLE_PRESETS)
 
     control._update_mirror_position_display(moved_to=ANGLE_PRESETS["zenith"])
     assert control.mirror_position_display.text() == "180\u00b0 (zenith)"
