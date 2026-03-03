@@ -90,7 +90,8 @@ class StepperMotorControl(DevicePanel):
         """
         text = f"{round(moved_to)}°"
         if preset := next(
-            (k for k, v in self.angle_presets.items() if v == moved_to), None
+            (k for k, v in self.angle_presets.items() if round(v) == round(moved_to)),
+            None,
         ):
             text += f" ({preset})"
         self.mirror_position_display.setText(text)
