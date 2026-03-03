@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from frog.config import ANGLE_PRESETS
 from frog.hardware.plugins.stepper_motor.stepper_motor_base import StepperMotorBase
 
 
@@ -54,7 +53,7 @@ def test_init() -> None:
         )
         subscribe_mock.assert_any_call(stepper.stop_moving, "stop")
         sendmsg_mock.assert_called_once_with(
-            "angle_presets", angle_presets=ANGLE_PRESETS
+            "angle_presets", angle_presets=StepperMotorBase.ANGLE_PRESETS
         )
 
 

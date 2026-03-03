@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QWidget
 from schema import And, Const, Or, Schema, SchemaError
 from statemachine import State, StateMachine
 
-from frog.config import ANGLE_PRESETS, SPECTROMETER_TOPIC, STEPPER_MOTOR_TOPIC
+from frog.config import ANGLE_PRESET_NAMES, SPECTROMETER_TOPIC, STEPPER_MOTOR_TOPIC
 from frog.device_info import DeviceInstanceRef
 from frog.gui.error_message import show_error_message
 from frog.spectrometer_status import SpectrometerStatus
@@ -103,7 +103,7 @@ def parse_script(script: str | TextIOBase) -> dict[str, Any]:
         ParseError: The script's contents were invalid
     """
     valid_float: Any = And(float, lambda f: 0.0 <= f < 360.0)
-    valid_preset: Any = And(str, lambda s: s in ANGLE_PRESETS)
+    valid_preset: Any = And(str, lambda s: s in ANGLE_PRESET_NAMES)
     measurements_type: Any = And(int, lambda x: x > 0)
     nonempty_list: Any = And(list, lambda x: x)
 

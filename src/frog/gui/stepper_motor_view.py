@@ -6,7 +6,7 @@ from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QSpinBox
 
-from frog.config import ANGLE_PRESETS, STEPPER_MOTOR_TOPIC
+from frog.config import ANGLE_PRESET_NAMES, STEPPER_MOTOR_TOPIC
 from frog.gui.device_panel import DevicePanel
 
 
@@ -25,7 +25,7 @@ class StepperMotorControl(DevicePanel):
 
         # Add all the buttons for preset positions
         BUTTONS_PER_ROW = 4
-        for i, preset in enumerate(ANGLE_PRESETS):
+        for i, preset in enumerate(ANGLE_PRESET_NAMES):
             btn = self._add_checkable_button(preset.upper())
             self.button_group.addButton(btn)
 

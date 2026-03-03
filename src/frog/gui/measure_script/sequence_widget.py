@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from frog.config import ANGLE_PRESETS
+from frog.config import ANGLE_PRESET_NAMES
 from frog.gui.measure_script.count_widget import CountWidget
 from frog.gui.measure_script.script import Measurement
 
@@ -215,7 +215,7 @@ class AddButtons(QGroupBox):
         # Add buttons for preset angles (e.g. zenith, nadir, etc.)
         self.group = QButtonGroup()
         self.group.buttonClicked.connect(self._preset_clicked)
-        for preset in ANGLE_PRESETS:
+        for preset in ANGLE_PRESET_NAMES:
             btn = QPushButton(preset.upper())
             self.group.addButton(btn)
             layout.addWidget(btn)

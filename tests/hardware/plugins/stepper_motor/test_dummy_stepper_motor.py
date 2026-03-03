@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from frog.config import ANGLE_PRESETS, STEPPER_MOTOR_TOPIC
+from frog.config import ANGLE_PRESET_NAMES, STEPPER_MOTOR_TOPIC
 from frog.hardware.plugins.stepper_motor.dummy import DummyStepperMotor
 
 
@@ -81,10 +81,10 @@ BAD_PRESETS = ("", "ZENITH", "kevin", "badger")
         [
             name,
             pytest.raises(ValueError)
-            if name not in ANGLE_PRESETS.keys()
+            if name not in ANGLE_PRESET_NAMES
             else does_not_raise(),
         ]
-        for name in chain(ANGLE_PRESETS.keys(), BAD_PRESETS)
+        for name in chain(ANGLE_PRESET_NAMES, BAD_PRESETS)
     ],
 )
 def test_move_to_preset(

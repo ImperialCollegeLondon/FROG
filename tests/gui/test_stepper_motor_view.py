@@ -7,8 +7,9 @@ import pytest
 from PySide6.QtWidgets import QButtonGroup, QLabel, QPushButton
 from pytestqt.qtbot import QtBot
 
-from frog.config import ANGLE_PRESETS, STEPPER_MOTOR_TOPIC
+from frog.config import ANGLE_PRESET_NAMES, STEPPER_MOTOR_TOPIC
 from frog.gui.stepper_motor_view import StepperMotorControl
+from frog.hardware.plugins.stepper_motor.stepper_motor_base import StepperMotorBase
 
 
 @patch("frog.gui.stepper_motor_view.QButtonGroup")
@@ -24,7 +25,7 @@ def test_init(button_group_mock: Mock, qtbot: QtBot) -> None:
 
         # Check that there is a button for each preset angle
         btn_labels = {btn.text().lower() for btn in button_group.buttons()}
-        assert set(ANGLE_PRESETS.keys()).issubset(btn_labels)
+        assert set(ANGLE_PRESET_NAMES).issubset(btn_labels)
 
         # Check that there's also a goto button
         assert "goto" in btn_labels
@@ -36,7 +37,7 @@ def test_init(button_group_mock: Mock, qtbot: QtBot) -> None:
     assert control.mirror_position_display.text() == ""
 
 
-@pytest.mark.parametrize("preset", ANGLE_PRESETS.keys())
+@pytest.mark.parametrize("preset", ANGLE_PRESET_NAMES)
 def test_preset_clicked(preset: str, sendmsg_mock: MagicMock, qtbot: QtBot) -> None:
     """Test the _preset_clicked() method."""
     control = StepperMotorControl()
@@ -79,9 +80,11 @@ def test_indicate_moving(qtbot: QtBot) -> None:
 def test_update_mirror_position_display(qtbot: QtBot) -> None:
     """Test the mirror position display updates correctly."""
     control = StepperMotorControl()
-    control._update_preset_angles(ANGLE_PRESETS)
+    control._update_preset_angles(StepperMotorBase.ANGLE_PRESETS)
 
-    control._update_mirror_position_display(moved_to=ANGLE_PRESETS["zenith"])
+    control._update_mirror_position_display(
+        moved_to=StepperMotorBase.ANGLE_PRESETS["zenith"]
+    )
     assert control.mirror_position_display.text() == "180\u00b0 (zenith)"
 
     control._update_mirror_position_display(moved_to=12.34)

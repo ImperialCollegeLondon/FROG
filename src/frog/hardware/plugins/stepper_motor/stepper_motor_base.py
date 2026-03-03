@@ -2,12 +2,19 @@
 
 from abc import abstractmethod
 
-from frog.config import ANGLE_PRESETS, STEPPER_MOTOR_TOPIC
+from frozendict import frozendict
+
+from frog.config import STEPPER_MOTOR_TOPIC
 from frog.hardware.device import Device
 
 
 class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper motor"):
     """A base class for stepper motor implementations."""
+
+    ANGLE_PRESETS = frozendict(
+        zenith=180.0, nadir=0.0, hot_bb=270.0, cold_bb=225.0, home=0.0, park=90.0
+    )
+    """Preset angles that the mirror can rotate to."""
 
     def __init__(self) -> None:
         """Create a new StepperMotorBase.
@@ -22,10 +29,10 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
     def signal_is_opened(self) -> None:
         """Signal that the device is now open."""
         super().signal_is_opened()
-        self.send_message("angle_presets", angle_presets=ANGLE_PRESETS)
+        self.send_message("angle_presets", angle_presets=self.ANGLE_PRESETS)
 
-    @staticmethod
-    def preset_angle(name: str) -> float:
+    @classmethod
+    def preset_angle(cls, name: str) -> float:
         """Get the angle for one of the preset positions.
 
         Args:
@@ -35,7 +42,7 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
             The angle in degrees
         """
         try:
-            return ANGLE_PRESETS[name]
+            return cls.ANGLE_PRESETS[name]
         except KeyError as e:
             raise ValueError(f"{name} is not a valid preset") from e
 
