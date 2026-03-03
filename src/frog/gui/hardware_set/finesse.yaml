@@ -8,6 +8,8 @@ devices:
       baudrate: 9600
       timeout: 5.0
       steps_after_home: -30130
+      hot_bb_angle: 270.0
+      cold_bb_angle: 225.0
   temperature_controller.hot_bb:
     class_name: temperature.tc4820.TC4820
     params:

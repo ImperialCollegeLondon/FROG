@@ -178,6 +178,8 @@ class ST10Controller(
     parameters={
         "timeout": "Timeout for serial connection",
         "steps_after_home": "Number of steps to move after homing",
+        "hot_bb_angle": "Angle of hot black body relative to nadir (degrees)",
+        "cold_bb_angle": "Angle of cold black body relative to nadir (degrees)",
     },
     async_open=True,
 ):
@@ -205,6 +207,8 @@ class ST10Controller(
         baudrate: int = 9600,
         timeout: float = 5.0,
         steps_after_home: int = 0,
+        hot_bb_angle: float = 0.0,
+        cold_bb_angle: float = 0.0,
     ) -> None:
         """Create a new ST10Controller.
 
@@ -213,6 +217,8 @@ class ST10Controller(
             baudrate: Baud rate of port
             timeout: Connection timeout
             steps_after_home: Number of steps to move after homing
+            hot_bb_angle: Angle of hot black body relative to nadir (degrees)
+            cold_bb_angle: Angle of cold black body relative to nadir (degrees)
 
         Raises:
             SerialException: Error communicating with device
@@ -253,7 +259,9 @@ class ST10Controller(
         # Move mirror to home position
         self._home_and_reset(steps_after_home)
 
-        StepperMotorBase.__init__(self)
+        StepperMotorBase.__init__(
+            self, hot_bb_angle=hot_bb_angle, cold_bb_angle=cold_bb_angle
+        )
 
     def close(self) -> None:
         """Close device and leave mirror facing downwards.

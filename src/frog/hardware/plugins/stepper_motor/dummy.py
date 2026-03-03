@@ -44,7 +44,8 @@ class DummyStepperMotor(
         self._steps_per_rotation = steps_per_rotation
         self._step = self._new_step = 0
 
-        super().__init__()
+        # Use arbitrary angles for hot and cold black bodies
+        super().__init__(hot_bb_angle=270.0, cold_bb_angle=225.0)
 
     @property
     def steps_per_rotation(self) -> int:

@@ -11,17 +11,32 @@ from frog.hardware.device import Device
 class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper motor"):
     """A base class for stepper motor implementations."""
 
-    ANGLE_PRESETS = frozendict(
-        zenith=180.0, nadir=0.0, hot_bb=270.0, cold_bb=225.0, home=0.0, park=90.0
-    )
-    """Preset angles that the mirror can rotate to."""
+    ANGLE_PRESET_DEFAULTS = frozendict(zenith=180.0, nadir=0.0, home=0.0, park=90.0)
+    """Values for preset angles that the mirror can rotate to.
 
-    def __init__(self) -> None:
+    This does not include angles for hot_bb and cold_bb as these can be configured by
+    users.
+    """
+
+    def __init__(self, hot_bb_angle: float, cold_bb_angle: float) -> None:
         """Create a new StepperMotorBase.
+
+        Args:
+            hot_bb_angle: Angle of hot black body relative to nadir (degrees)
+            cold_bb_angle: Angle of cold black body relative to nadir (degrees)
 
         Subscribe to stepper motor pubsub messages.
         """
         super().__init__()
+
+        if not (0.0 <= hot_bb_angle < 360.0):
+            raise ValueError("Hot BB angle must be ≥0˚ and <360˚")
+        if not (0.0 <= cold_bb_angle < 360.0):
+            raise ValueError("Cold BB angle must be ≥0˚ and <360˚")
+
+        self.angle_presets = frozendict(
+            **self.ANGLE_PRESET_DEFAULTS, hot_bb=hot_bb_angle, cold_bb=cold_bb_angle
+        )
 
         self.subscribe(self.move_to, "move.begin")
         self.subscribe(self.stop_moving, "stop")
@@ -29,22 +44,7 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
     def signal_is_opened(self) -> None:
         """Signal that the device is now open."""
         super().signal_is_opened()
-        self.send_message("angle_presets", angle_presets=self.ANGLE_PRESETS)
-
-    @classmethod
-    def preset_angle(cls, name: str) -> float:
-        """Get the angle for one of the preset positions.
-
-        Args:
-            name: Name of preset angle
-
-        Returns:
-            The angle in degrees
-        """
-        try:
-            return cls.ANGLE_PRESETS[name]
-        except KeyError as e:
-            raise ValueError(f"{name} is not a valid preset") from e
+        self.send_message("angle_presets", angle_presets=self.angle_presets)
 
     @property
     @abstractmethod
@@ -90,12 +90,14 @@ class StepperMotorBase(Device, name=STEPPER_MOTOR_TOPIC, description="Stepper mo
             target: The target angle (in degrees) or the name of a preset
         """
         if isinstance(target, str):
-            target = self.preset_angle(target)
-
-        if target < 0.0 or target >= 360.0:
+            try:
+                target = self.angle_presets[target]
+            except KeyError:
+                raise ValueError(f"{target} not a valid angle preset")
+        elif target < 0.0 or target >= 360.0:
             raise ValueError("Angle must be between 0° and 360°")
 
-        self.step = round(self.steps_per_rotation * target / 360.0)
+        self.step = round(self.steps_per_rotation * target / 360.0)  # type: ignore[operator]
 
     def send_move_end_message(self) -> None:
         """Send a message containing the angle moved to, once move ends."""

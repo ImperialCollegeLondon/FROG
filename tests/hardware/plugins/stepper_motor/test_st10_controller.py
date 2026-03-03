@@ -69,7 +69,10 @@ def test_init(subscribe_mock: MagicMock, serial_mock: MagicMock) -> None:
     ):
         # We assign to a variable so the destructor isn't invoked until after
         # our checks
-        st10 = ST10Controller(*_SERIAL_ARGS)
+        st10 = ST10Controller(*_SERIAL_ARGS, hot_bb_angle=1.0, cold_bb_angle=2.0)
+        assert st10.angle_presets["hot_bb"] == 1.0
+        assert st10.angle_presets["cold_bb"] == 2.0
+
         r = cast(MagicMock, st10._reader)
         r.async_read_completed.connect.assert_called_once_with(
             st10._on_initial_move_end

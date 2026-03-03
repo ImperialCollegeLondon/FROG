@@ -9,7 +9,6 @@ from pytestqt.qtbot import QtBot
 
 from frog.config import ANGLE_PRESET_NAMES, STEPPER_MOTOR_TOPIC
 from frog.gui.stepper_motor_view import StepperMotorControl
-from frog.hardware.plugins.stepper_motor.stepper_motor_base import StepperMotorBase
 
 
 @patch("frog.gui.stepper_motor_view.QButtonGroup")
@@ -80,11 +79,9 @@ def test_indicate_moving(qtbot: QtBot) -> None:
 def test_update_mirror_position_display(qtbot: QtBot) -> None:
     """Test the mirror position display updates correctly."""
     control = StepperMotorControl()
-    control._update_preset_angles(StepperMotorBase.ANGLE_PRESETS)
+    control._update_preset_angles({"zenith": 180.0})
 
-    control._update_mirror_position_display(
-        moved_to=StepperMotorBase.ANGLE_PRESETS["zenith"]
-    )
+    control._update_mirror_position_display(moved_to=180.0)
     assert control.mirror_position_display.text() == "180\u00b0 (zenith)"
 
     control._update_mirror_position_display(moved_to=12.34)
