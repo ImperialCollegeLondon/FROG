@@ -1,10 +1,12 @@
 """Code for controlling the stepper motor which moves the mirror."""
 
+from collections.abc import Mapping
+
 from pubsub import pub
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QSpinBox
 
-from frog.config import ANGLE_PRESETS, STEPPER_MOTOR_TOPIC
+from frog.config import ANGLE_PRESET_NAMES, STEPPER_MOTOR_TOPIC
 from frog.gui.device_panel import DevicePanel
 
 
@@ -23,7 +25,7 @@ class StepperMotorControl(DevicePanel):
 
         # Add all the buttons for preset positions
         BUTTONS_PER_ROW = 4
-        for i, preset in enumerate(ANGLE_PRESETS):
+        for i, preset in enumerate(ANGLE_PRESET_NAMES):
             btn = self._add_checkable_button(preset.upper())
             self.button_group.addButton(btn)
 
@@ -46,6 +48,10 @@ class StepperMotorControl(DevicePanel):
 
         self.setLayout(layout)
 
+        self.angle_presets: Mapping[str, float]
+        pub.subscribe(
+            self._update_preset_angles, f"device.{STEPPER_MOTOR_TOPIC}.angle_presets"
+        )
         pub.subscribe(
             self._indicate_moving,
             f"device.{STEPPER_MOTOR_TOPIC}.move.begin",
@@ -69,6 +75,10 @@ class StepperMotorControl(DevicePanel):
         target = float(self.angle.value()) if btn is self.goto else btn.text().lower()
         pub.sendMessage(f"device.{STEPPER_MOTOR_TOPIC}.move.begin", target=target)
 
+    def _update_preset_angles(self, angle_presets: Mapping[str, float]) -> None:
+        """Update the values of the preset angles."""
+        self.angle_presets = angle_presets
+
     def _indicate_moving(self, target) -> None:
         """Update the display the indicate that the mirror is moving."""
         self.mirror_position_display.setText("Moving...")
@@ -79,6 +89,9 @@ class StepperMotorControl(DevicePanel):
         If angle corresponds to a preset, show the associated name as well as the value.
         """
         text = f"{round(moved_to)}°"
-        if preset := next((k for k, v in ANGLE_PRESETS.items() if v == moved_to), None):
+        if preset := next(
+            (k for k, v in self.angle_presets.items() if round(v) == round(moved_to)),
+            None,
+        ):
             text += f" ({preset})"
         self.mirror_position_display.setText(text)

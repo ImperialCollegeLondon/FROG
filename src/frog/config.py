@@ -20,15 +20,15 @@ APP_CONFIG_PATH = user_config_path(APP_NAME, APP_AUTHOR, ensure_exists=True)
 HARDWARE_SET_USER_PATH = APP_CONFIG_PATH / "hardware_sets"
 """Path where user-added hardware set config files will be saved."""
 
-ANGLE_PRESETS = {
-    "zenith": 180.0,
-    "nadir": 0.0,
-    "hot_bb": 270.0,
-    "cold_bb": 225.0,
-    "home": 0.0,
-    "park": 90.0,
-}
-"""Preset angles that the mirror can rotate to."""
+ANGLE_PRESET_NAMES = (
+    "zenith",
+    "nadir",
+    "hot_bb",
+    "cold_bb",
+    "home",
+    "park",
+)
+"""Names of preset angles that the mirror can rotate to."""
 
 BAUDRATES = (4800, 9600, 19200, 38400, 57600, 115200)
 """The valid baud rates for use by the GUI."""

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from PySide6.QtWidgets import QPushButton
 
-from frog.config import ANGLE_PRESETS
+from frog.config import ANGLE_PRESET_NAMES
 from frog.gui.measure_script.script import Measurement
 from frog.gui.measure_script.sequence_widget import (
     AddButtons,
@@ -194,7 +194,7 @@ def test_change_buttons(name: str, callee: str, widget: SequenceWidget) -> None:
 
 @pytest.mark.parametrize(
     "preset,count",
-    ((preset, count) for preset in ANGLE_PRESETS for count in range(1, 3)),
+    ((preset, count) for preset in ANGLE_PRESET_NAMES for count in range(1, 3)),
 )
 def test_add_buttons(preset: str, count: int, widget: SequenceWidget) -> None:
     """Test the AddButtons class."""

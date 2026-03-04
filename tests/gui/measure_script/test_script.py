@@ -10,7 +10,7 @@ import pytest
 import yaml
 from PySide6.QtWidgets import QWidget
 
-from frog.config import ANGLE_PRESETS
+from frog.config import ANGLE_PRESET_NAMES
 from frog.gui.measure_script.script import (
     CURRENT_SCRIPT_VERSION,
     Measurement,
@@ -25,7 +25,7 @@ def is_valid_angle(angle: Any) -> bool:
     if isinstance(angle, float) and 0.0 <= angle < 360.0:
         return True
 
-    if angle in ANGLE_PRESETS:
+    if angle in ANGLE_PRESET_NAMES:
         return True
 
     return False
