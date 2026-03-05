@@ -12,7 +12,9 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "PySide6<7.0.0,>=6.9.0",
+    # PySide6 v6.10 not working with pytest-qt:
+    #   https://github.com/ImperialCollegeLondon/FROG/issues/909
+    "PySide6<6.10.0,>=6.9.0",
     "matplotlib<4.0.0,>=3.10.1",
     "platformdirs<5.0.0,>=4.2.2",
     "pypubsub<5.0.0,>=4.0.3",
