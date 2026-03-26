@@ -8,10 +8,10 @@ from crc import Calculator, Crc16
 from serial import SerialException
 
 from frog.config import (
-    SENECA_MAX_MILLIVOLT,
-    SENECA_MAX_TEMP,
-    SENECA_MIN_MILLIVOLT,
-    SENECA_MIN_TEMP,
+    Z8AI_MAX_MILLIVOLT,
+    Z8AI_MAX_TEMP,
+    Z8AI_MIN_MILLIVOLT,
+    Z8AI_MIN_TEMP,
 )
 from frog.hardware.plugins.temperature.temperature_monitor_base import (
     TemperatureMonitorBase,
@@ -33,14 +33,14 @@ def calculate_crc(data: bytes) -> int:
     return checksum
 
 
-class SenecaK107Error(Exception):
+class Z8AIError(Exception):
     """Indicates that an error occurred while communicating with the device."""
 
 
-class SenecaK107(
+class Z8AI(
     SerialDevice,
     TemperatureMonitorBase,
-    description="Seneca K107",
+    description="Seneca Z-8AI",
     parameters={
         "min_temp": "The minimum temperature limit of the device",
         "max_temp": "The maximum temperature limit of the device",
@@ -48,26 +48,26 @@ class SenecaK107(
         "max_millivolt": "The maximum voltage output (millivolts) of the device",
     },
 ):
-    """An interface for the Seneca K107USB serial converter.
+    """An interface for the Seneca Z-8AI analogue input module.
 
     This device communicates through the MODBUS-RTU protocol and outputs data from
     temperature monitor devices. The current connected temperature monitor device is
     the Seneca T121.
 
     The manual for this device is available at:
-    https://www.seneca.it/products/k107usb/doc/installation_manualEN
+    https://www.seneca.it/en/linee-di-prodotto/acquisizione-dati-e-automazione/sistemi-io-modbus-rtu/moduli-io-analogici/z-8ai
     """
 
     def __init__(
         self,
         port: str,
         baudrate: int = 57600,
-        min_temp: int = SENECA_MIN_TEMP,
-        max_temp: int = SENECA_MAX_TEMP,
-        min_millivolt: int = SENECA_MIN_MILLIVOLT,
-        max_millivolt: int = SENECA_MAX_MILLIVOLT,
+        min_temp: int = Z8AI_MIN_TEMP,
+        max_temp: int = Z8AI_MAX_TEMP,
+        min_millivolt: int = Z8AI_MIN_MILLIVOLT,
+        max_millivolt: int = Z8AI_MAX_MILLIVOLT,
     ) -> None:
-        """Create a new SenecaK107.
+        """Create a new Z8AI.
 
         Args:
             port: Description of USB port (vendor ID + product ID)
@@ -92,42 +92,42 @@ class SenecaK107(
         self.SCALING_FACTOR = temp_range / millivolt_range
 
     def read(self) -> bytes:
-        """Read temperature data from the SenecaK107.
+        """Read temperature data from the Z-8AI.
 
         Returns:
             data: The sequence of bytes read from the device
 
         Raises:
-            SenecaK107Error: Malformed message received from device
+            Z8AIError: Malformed message received from device
         """
         try:
             data = self.serial.read(size=21)
         except SerialException as e:
-            raise SenecaK107Error(e)
+            raise Z8AIError(e)
 
         # require 21 bytes else checks will fail
         min_length = 21
         if len(data) != min_length:
-            raise SenecaK107Error("Insufficient data read from device")
+            raise Z8AIError("Insufficient data read from device")
 
         return data
 
     def request_read(self) -> None:
-        """Write a message to the SenecaK107 to prepare for a read operation.
+        """Write a message to the Z8AI to prepare for a read operation.
 
         A byte array of [1, 3, 0, 2, 0, 8, 229, 204] is written to the device as a
         request to read the data. This byte array was taken from the original C# code.
 
         Raises:
-            SenecaK107Error: Error writing to the device
+            Z8AIError: Error writing to the device
         """
         try:
             self.serial.write(bytearray([1, 3, 0, 2, 0, 8, 229, 204]))
         except Exception as e:
-            raise SenecaK107Error(e)
+            raise Z8AIError(e)
 
     def parse_data(self, data: bytes) -> numpy.ndarray:
-        """Parse temperature data read from the SenecaK107.
+        """Parse temperature data read from the Z8AI.
 
         The sequence of bytes is put through the conversion function and translated
         into floats.
@@ -136,14 +136,13 @@ class SenecaK107(
             data: The bytes read from the device.
 
         Returns:
-            An array containing the temperature values recorded
-                by the SenecaK107 device.
+            An array containing the temperature values recorded by the Z-8AI device.
         """
         crc = calculate_crc(data)
         check = numpy.frombuffer(data[19:], numpy.dtype(numpy.uint16))
 
         if crc != check:
-            raise SenecaK107Error("CRC check failed")
+            raise Z8AIError("CRC check failed")
 
         # Changes byte order as data read from device is in big-endian format
         dt = numpy.dtype(numpy.uint16).newbyteorder(">")
@@ -154,7 +153,7 @@ class SenecaK107(
         return self.calc_temp(ints)
 
     def calc_temp(self, vals: numpy.ndarray) -> numpy.ndarray:
-        """Convert data read from the SenecaK107 device into temperatures.
+        """Convert data read from the Z-8AI device into temperatures.
 
         Any readings outside the minimum and maximum temperature values will be changed
         to NaNs and a warning will be raised in the logs.

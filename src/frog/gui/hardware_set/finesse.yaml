@@ -21,7 +21,7 @@ devices:
       port: "0403:6011 (3)"
       baudrate: 115200
   temperature_monitor:
-    class_name: temperature.senecak107.SenecaK107
+    class_name: temperature.z8ai.Z8AI
     params:
       port: "0403:6001"
       baudrate: 57600
