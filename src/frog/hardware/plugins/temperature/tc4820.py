@@ -1,14 +1,11 @@
 """This module provides an interface to TC4820 temperature controllers.
 
-Decimal numbers are used for values sent to and read from the device as the values are
-base-10 and using floats could cause rounding errors.
-
-There are broadly two serial-related exceptions that are raised by this module.
+There are broadly two device-related exceptions that are raised by this module.
 MalformedMessageErrors are raised when a message is corrupted and are recoverable (i.e.
-you can try submitting the request again). serial.SerialExceptions indicate that an
-IO error occurred while communicating with the device (e.g. because a USB cable has
-become disconnected) and are unlikely to be recoverable. A SerialException is also
-raised if multiple attempts at a request have failed.
+you can try submitting the request again). serial.SerialExceptions indicate that an IO
+error occurred while communicating with the device (e.g. because a USB cable has become
+disconnected) and are unlikely to be recoverable. A RetryFailedError is raised if
+multiple attempts at a request have failed.
 """
 
 from __future__ import annotations
@@ -16,9 +13,7 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 
-from serial import SerialException
-
-from frog.hardware.device import DeviceError
+from frog.hardware.device import DeviceError, retry_request
 from frog.hardware.plugins.temperature.temperature_controller_base import (
     TemperatureControllerBase,
 )
@@ -132,20 +127,15 @@ class TC4820(SerialDevice, TemperatureControllerBase, description="TC4820"):
         a maximum of self.max_attempts times.
 
         Raises:
-            SerialException: An error occurred while communicating with the device or
-                             max attempts was exceeded
+            RetryFailedError: Max attempts exceeded due to repeated malformed messages
+            SerialException: An error occurred while communicating with the device
         """
-        for _ in range(self.max_attempts):
+
+        def attempt() -> int:
             self.send_command(command)
+            return self.read_int()
 
-            try:
-                return self.read_int()
-            except MalformedMessageError as e:
-                logging.warn(f"Malformed message: {e!s}; retrying")
-
-        raise SerialException(
-            f"Maximum number of attempts (={self.max_attempts}) exceeded"
-        )
+        return retry_request(attempt, self.max_attempts, MalformedMessageError)
 
     def request_decimal(self, command: str) -> Decimal:
         """Write the specified command then read a Decimal from the device.
@@ -154,8 +144,8 @@ class TC4820(SerialDevice, TemperatureControllerBase, description="TC4820"):
         attempted a maximum of self.max_attempts times.
 
         Raises:
-            SerialException: An error occurred while communicating with the device or
-                             max attempts was exceeded
+            RetryFailedError: Max attempts exceeded due to repeated malformed messages
+            SerialException: An error occurred while communicating with the device
         """
         return self.to_decimal(self.request_int(command))
 

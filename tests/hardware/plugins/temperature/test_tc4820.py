@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_mock import MockerFixture
-from serial import SerialException
 
+from frog.hardware.device import RetryFailedError
 from frog.hardware.plugins.temperature.tc4820 import TC4820, MalformedMessageError
 
 _SERIAL_ARGS = ("COM1", 9600)
@@ -130,7 +130,7 @@ def test_write(value: int, dev: TC4820) -> None:
         (
             max_attempts,
             fail_max,
-            pytest.raises(SerialException)
+            pytest.raises(RetryFailedError)
             if fail_max >= max_attempts
             else does_not_raise(),
         )
