@@ -132,17 +132,17 @@ TEMPERATURE_MONITOR_COLD_BB_IDX = 7
 TEMPERATURE_PRECISION = 2
 """Number of decimal places used when writing temperatures to data files (Kelvin)."""
 
-SENECA_MIN_TEMP = -80
-"""The default minimum temperature limit of the Seneca K107 device."""
+Z8AI_MIN_TEMP = -80
+"""The default minimum temperature limit of the Seneca Z-8AI device."""
 
-SENECA_MAX_TEMP = 105
-"""The default maximum temperature limit of the Seneca K107 device."""
+Z8AI_MAX_TEMP = 105
+"""The default maximum temperature limit of the Seneca Z-8AI device."""
 
-SENECA_MIN_MILLIVOLT = 4
-"""The default minimum voltage output (millivolts) of the Seneca K107 device."""
+Z8AI_MIN_MILLIVOLT = 4
+"""The default minimum voltage output (millivolts) of the Seneca Z-8AI device."""
 
-SENECA_MAX_MILLIVOLT = 20
-"""The default maximum voltage output (millivolts) of the Seneca K107 device."""
+Z8AI_MAX_MILLIVOLT = 20
+"""The default maximum voltage output (millivolts) of the Seneca Z-8AI device."""
 
 TIME_TOPIC = "time"
 """The topic name to use for time-related messages."""
