@@ -13,6 +13,7 @@ from frog.config import (
     Z8AI_MIN_MILLIVOLT,
     Z8AI_MIN_TEMP,
 )
+from frog.hardware.device import DeviceError
 from frog.hardware.plugins.temperature.temperature_monitor_base import (
     TemperatureMonitorBase,
 )
@@ -33,7 +34,7 @@ def calculate_crc(data: bytes) -> int:
     return checksum
 
 
-class Z8AIError(Exception):
+class Z8AIError(DeviceError):
     """Indicates that an error occurred while communicating with the device."""
 
 

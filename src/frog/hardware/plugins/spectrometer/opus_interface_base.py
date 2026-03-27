@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from abc import abstractmethod
 
+from frog.hardware.device import DeviceError
 from frog.hardware.plugins.spectrometer.spectrometer_base import SpectrometerBase
 
 
-class OPUSError(Exception):
+class OPUSError(DeviceError):
     """Indicates that an error occurred with an OPUS device."""
 
     @classmethod

@@ -28,6 +28,11 @@ from frog.device_info import (
 from frog.hardware.plugins import __name__ as _plugins_name
 from frog.hardware.plugins import load_all_plugins
 
+
+class DeviceError(Exception):
+    """Base class for errors raised by device plugins."""
+
+
 _base_types: set[type[Device]] = set()
 """Registry of device base types."""
 

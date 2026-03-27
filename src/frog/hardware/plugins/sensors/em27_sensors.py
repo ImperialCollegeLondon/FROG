@@ -12,7 +12,7 @@ from frog.config import (
     EM27_SENSORS_POLL_INTERVAL,
     EM27_SENSORS_URL,
 )
-from frog.hardware.device import DeviceClassType
+from frog.hardware.device import DeviceClassType, DeviceError
 from frog.hardware.http_device import HTTPDevice
 from frog.hardware.plugins.sensors.sensors_base import SensorsBase
 from frog.sensor_reading import SensorReading
@@ -50,7 +50,7 @@ def get_em27_sensor_data(content: str) -> list[SensorReading]:
     return data_table
 
 
-class EM27Error(Exception):
+class EM27Error(DeviceError):
     """Indicates than an error occurred while parsing the webpage."""
 
 

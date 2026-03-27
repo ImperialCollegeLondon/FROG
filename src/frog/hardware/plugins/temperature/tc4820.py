@@ -18,6 +18,7 @@ from decimal import Decimal
 
 from serial import SerialException
 
+from frog.hardware.device import DeviceError
 from frog.hardware.plugins.temperature.temperature_controller_base import (
     TemperatureControllerBase,
 )
@@ -26,7 +27,7 @@ from frog.hardware.serial_device import SerialDevice
 MAX_POWER = 511
 
 
-class MalformedMessageError(Exception):
+class MalformedMessageError(DeviceError):
     """Raised when a message sent or received was malformed."""
 
 

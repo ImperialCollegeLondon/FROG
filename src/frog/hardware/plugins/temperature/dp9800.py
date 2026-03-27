@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from serial import SerialException
 
+from frog.hardware.device import DeviceError
 from frog.hardware.plugins.temperature.temperature_monitor_base import (
     TemperatureMonitorBase,
 )
@@ -82,7 +83,7 @@ def parse_data(data: bytes) -> tuple[list[Decimal], str]:
     return vals[1:], sysflag[2:]
 
 
-class DP9800Error(Exception):
+class DP9800Error(DeviceError):
     """Indicates that an error occurred while communicating with the device."""
 
 
