@@ -4,7 +4,13 @@ from collections.abc import Mapping
 
 from pubsub import pub
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QButtonGroup, QGridLayout, QLabel, QPushButton, QSpinBox
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QDoubleSpinBox,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+)
 
 from frog.config import ANGLE_PRESET_NAMES, STEPPER_MOTOR_TOPIC
 from frog.gui.device_panel import DevicePanel
@@ -33,8 +39,10 @@ class StepperMotorControl(DevicePanel):
             layout.addWidget(btn, row, col)
 
         # We also have a way for users to move the mirror to an angle of their choice
-        self.angle = QSpinBox()
-        self.angle.setMaximum(359)
+        self.angle = QDoubleSpinBox()
+        self.angle.setDecimals(1)
+        self.angle.setSingleStep(0.1)
+        self.angle.setMaximum(359.9)
         self.goto = self._add_checkable_button("GOTO")
 
         layout.addWidget(self.angle, 1, 2)
@@ -88,9 +96,9 @@ class StepperMotorControl(DevicePanel):
 
         If angle corresponds to a preset, show the associated name as well as the value.
         """
-        text = f"{round(moved_to)}°"
+        text = f"{moved_to:.1f}°"
         if preset := next(
-            (k for k, v in self.angle_presets.items() if round(v) == round(moved_to)),
+            (k for k, v in self.angle_presets.items() if abs(v - moved_to) < 0.05),
             None,
         ):
             text += f" ({preset})"

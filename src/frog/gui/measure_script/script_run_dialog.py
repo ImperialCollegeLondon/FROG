@@ -89,7 +89,7 @@ class ScriptRunDialog(QDialog):
     def _on_start_moving(self, script_runner: ScriptRunner) -> None:
         angle = script_runner.current_measurement.angle
         if isinstance(angle, float):
-            angle = f"{round(angle)}°"
+            angle = f"{angle:.1f}°"
         self._update(script_runner, f"Moving to {angle}")
 
     def _on_start_measuring(self, script_runner: ScriptRunner) -> None:

@@ -6,11 +6,11 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelInd
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QButtonGroup,
+    QDoubleSpinBox,
     QGroupBox,
     QHBoxLayout,
     QMessageBox,
     QPushButton,
-    QSpinBox,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -154,7 +154,7 @@ class SequenceModel(QAbstractTableModel):
                 self._sequence[index.row()], SequenceModel._COLUMNS[index.column()]
             )
             if isinstance(value, float):
-                return f"{value:.0f}°"
+                return f"{value:.1f}°"
             return value
 
     def headerData(
@@ -223,10 +223,12 @@ class AddButtons(QGroupBox):
         # Add button and spinbox for going to a specific angle. Put them next to each
         # other on the same row.
         goto_layout = QHBoxLayout()
-        self.angle = QSpinBox()
+        self.angle = QDoubleSpinBox()
         self.angle.setSuffix("°")
-        self.angle.setMinimum(0)
-        self.angle.setMaximum(359)
+        self.angle.setDecimals(1)
+        self.angle.setSingleStep(0.1)
+        self.angle.setMinimum(0.0)
+        self.angle.setMaximum(359.9)
         self.goto = QPushButton("GOTO")
         self.goto.clicked.connect(self._goto_clicked)
         goto_layout.addWidget(self.angle)
