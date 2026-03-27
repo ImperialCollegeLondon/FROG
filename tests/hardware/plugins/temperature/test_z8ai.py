@@ -95,3 +95,20 @@ def test_get_temperatures(dev: Z8AI, data: bytes) -> None:
     request_mock.assert_called_once_with()
     read_mock.assert_called_once_with()
     parse_mock.assert_called_once_with(data)
+
+
+def test_get_temperatures_retries_on_crc_error(dev: Z8AI, data: bytes) -> None:
+    """Test that Z8AI.get_temperatures() retries when a CRC check fails."""
+    result = MagicMock()
+    with patch.object(dev, "request_read") as request_mock:
+        with patch.object(dev, "read", return_value=data) as read_mock:
+            with patch.object(
+                dev,
+                "parse_data",
+                side_effect=[Z8AIError("CRC check failed"), result],
+            ) as parse_mock:
+                assert dev.get_temperatures() == result.tolist()
+
+    assert request_mock.call_count == 2
+    assert read_mock.call_count == 2
+    assert parse_mock.call_count == 2
