@@ -98,7 +98,7 @@ class StepperMotorControl(DevicePanel):
         """
         text = f"{moved_to:.1f}°"
         if preset := next(
-            (k for k, v in self.angle_presets.items() if abs(v - moved_to) < 0.05),
+            (k for k, v in self.angle_presets.items() if abs(v - moved_to) <= 0.05),
             None,
         ):
             text += f" ({preset})"
