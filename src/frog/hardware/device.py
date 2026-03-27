@@ -33,6 +33,50 @@ class DeviceError(Exception):
     """Base class for errors raised by device plugins."""
 
 
+class RetryFailedError(DeviceError):
+    """Indicates that an operation failed after multiple retries."""
+
+
+def retry_request[T](
+    func: Callable[[], T],
+    max_attempts: int,
+    catch: type[Exception],
+) -> T:
+    """Attempt to call func up to max_attempts times, retrying on caught exceptions.
+
+    The raised exception must be of type `catch`. If `func` raises an exception type
+    other than `catch`, it will not be caught and the request will not be retried.
+
+    On each failed attempt a warning is logged. If all attempts are exhausted a
+    RetryFailedError is raised.
+
+    Args:
+        func: The callable to invoke on each attempt.
+        max_attempts: Maximum number of attempts (must be >= 1).
+        catch: The exception type to catch and retry on.
+
+    Returns:
+        The return value of func on success.
+
+    Raises:
+        RetryFailedError: All attempts resulted in the `catch` error type being raised.
+    """
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be at least one")
+
+    last_error: Exception | None = None
+    for attempt in range(max_attempts):
+        try:
+            return func()
+        except catch as e:
+            logging.warning(f"Attempt {attempt + 1}/{max_attempts} failed: {e!s}")
+            last_error = e
+
+    raise RetryFailedError(
+        f"Maximum number of attempts (={max_attempts}) exceeded"
+    ) from last_error
+
+
 _base_types: set[type[Device]] = set()
 """Registry of device base types."""
 

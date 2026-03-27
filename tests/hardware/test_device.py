@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
+from contextlib import nullcontext as does_not_raise
 from typing import Any, ClassVar
 from unittest.mock import MagicMock, Mock, call, patch
 
@@ -12,7 +13,9 @@ from frog.hardware.device import (
     AbstractDevice,
     Device,
     DeviceTypeInfo,
+    RetryFailedError,
     get_device_types,
+    retry_request,
 )
 from frog.hardware.plugins import __name__ as plugins_name
 
@@ -435,3 +438,85 @@ def test_device_close(device: Device, unsubscribe_mock: MagicMock) -> None:
     device.close()
     assert unsubscribe_mock.call_count == 1
     unsubscribe_mock.assert_called_once_with(func, my_topic)
+
+
+# --- retry_request tests ---
+
+
+class _CaughtError(Exception):
+    pass
+
+
+class _OtherError(Exception):
+    pass
+
+
+def test_retry_request_invalid_max_attempts() -> None:
+    """Test that retry_request() raises ValueError when max_attempts < 1."""
+    with pytest.raises(ValueError):
+        retry_request(lambda: None, 0, _CaughtError)
+
+
+@pytest.mark.parametrize(
+    "max_attempts,fail_count,raises",
+    [
+        (
+            max_attempts,
+            fail_count,
+            pytest.raises(RetryFailedError)
+            if fail_count >= max_attempts
+            else does_not_raise(),
+        )
+        for fail_count in range(5)
+        for max_attempts in range(1, 5)
+    ],
+)
+def test_retry_request(max_attempts: int, fail_count: int, raises: Any) -> None:
+    """Test that retry_request() retries correctly and raises RetryFailedError."""
+    calls = 0
+
+    def func() -> int:
+        nonlocal calls
+        calls += 1
+        if calls <= fail_count:
+            raise _CaughtError()
+        return 42
+
+    with raises:
+        result = retry_request(func, max_attempts, _CaughtError)
+        assert result == 42
+
+    assert calls == min(fail_count + 1, max_attempts)
+
+
+def test_retry_request_uncaught_exception_propagates() -> None:
+    """Test that retry_request() does not catch unrelated exceptions."""
+    with pytest.raises(_OtherError):
+        retry_request(
+            Mock(side_effect=_OtherError),
+            max_attempts=3,
+            catch=_CaughtError,
+        )
+
+
+def test_retry_request_chains_last_exception() -> None:
+    """Test that RetryFailedError is raised from the last caught exception."""
+    last = _CaughtError("last failure")
+    errors = [_CaughtError("first"), _CaughtError("second"), last]
+    func = Mock(side_effect=errors)
+
+    with pytest.raises(RetryFailedError) as exc_info:
+        retry_request(func, max_attempts=3, catch=_CaughtError)
+
+    assert exc_info.value.__cause__ is last
+
+
+def test_retry_request_logs_warnings() -> None:
+    """Test that retry_request() logs a warning on each failed attempt."""
+    func = Mock(side_effect=_CaughtError("oops"))
+
+    with pytest.raises(RetryFailedError):
+        with patch("frog.hardware.device.logging") as log_mock:
+            retry_request(func, max_attempts=3, catch=_CaughtError)
+
+    assert log_mock.warning.call_count == 3
