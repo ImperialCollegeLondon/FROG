@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import numpy
 import pytest
-from serial import SerialException
 
 from frog.hardware.plugins.temperature.z8ai import Z8AI, Z8AIError
 
@@ -46,27 +45,12 @@ def test_write(dev: Z8AI) -> None:
     dev.serial.write.assert_called_once_with(bytearray([1, 3, 0, 2, 0, 8, 229, 204]))
 
 
-def test_write_error(dev: Z8AI) -> None:
-    """Test Z8AI.write() error handling."""
-    dev.serial.write.side_effect = RuntimeError
-    with pytest.raises(Z8AIError):
-        dev.request_read()
-
-
 def test_read(dev: Z8AI, data: bytes) -> None:
     """Test Z8AI.read()."""
     with patch.object(dev.serial, "read") as mock:
         mock.return_value = data
         assert data == dev.read()
         mock.assert_called_once()
-
-
-def test_read_serial_error(dev: Z8AI, data: bytes) -> None:
-    """Test Z8AI.read() error handling."""
-    with pytest.raises(Z8AIError):
-        with patch.object(dev.serial, "read", return_value=data):
-            dev.serial.read.side_effect = SerialException
-            dev.read()
 
 
 @pytest.mark.parametrize(

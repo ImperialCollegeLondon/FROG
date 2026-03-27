@@ -5,7 +5,6 @@ from collections.abc import Sequence
 
 import numpy
 from crc import Calculator, Crc16
-from serial import SerialException
 
 from frog.config import (
     Z8AI_MAX_MILLIVOLT,
@@ -99,12 +98,10 @@ class Z8AI(
             data: The sequence of bytes read from the device
 
         Raises:
+            SerialException: Error reading from the device
             Z8AIError: Malformed message received from device
         """
-        try:
-            data = self.serial.read(size=21)
-        except SerialException as e:
-            raise Z8AIError(e)
+        data = self.serial.read(size=21)
 
         # require 21 bytes else checks will fail
         min_length = 21
@@ -120,12 +117,9 @@ class Z8AI(
         request to read the data. This byte array was taken from the original C# code.
 
         Raises:
-            Z8AIError: Error writing to the device
+            SerialException: Error writing to the device
         """
-        try:
-            self.serial.write(bytearray([1, 3, 0, 2, 0, 8, 229, 204]))
-        except Exception as e:
-            raise Z8AIError(e)
+        self.serial.write(bytearray([1, 3, 0, 2, 0, 8, 229, 204]))
 
     def parse_data(self, data: bytes) -> numpy.ndarray:
         """Parse temperature data read from the Z8AI.
