@@ -15,11 +15,13 @@ devices:
     params:
       port: "0403:6011 (2)"
       baudrate: 115200
+      max_attempts: 3
   temperature_controller.cold_bb:
     class_name: temperature.tc4820.TC4820
     params:
       port: "0403:6011 (3)"
       baudrate: 115200
+      max_attempts: 3
   temperature_monitor:
     class_name: temperature.z8ai.Z8AI
     params:

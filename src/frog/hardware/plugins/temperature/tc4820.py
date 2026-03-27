@@ -26,7 +26,12 @@ class MalformedMessageError(DeviceError):
     """Raised when a message sent or received was malformed."""
 
 
-class TC4820(SerialDevice, TemperatureControllerBase, description="TC4820"):
+class TC4820(
+    SerialDevice,
+    TemperatureControllerBase,
+    description="TC4820",
+    parameters={"max_attempts": "Maximum number of attempts for requests"},
+):
     """An interface for TC4820 temperature controllers."""
 
     def __init__(
