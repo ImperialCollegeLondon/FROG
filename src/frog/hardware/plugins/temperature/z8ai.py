@@ -12,7 +12,7 @@ from frog.config import (
     Z8AI_MIN_MILLIVOLT,
     Z8AI_MIN_TEMP,
 )
-from frog.hardware.device import DeviceError
+from frog.hardware.device import DeviceError, retry_request
 from frog.hardware.plugins.temperature.temperature_monitor_base import (
     TemperatureMonitorBase,
 )
@@ -46,6 +46,7 @@ class Z8AI(
         "max_temp": "The maximum temperature limit of the device",
         "min_millivolt": "The minimum voltage output (millivolts) of the device",
         "max_millivolt": "The maximum voltage output (millivolts) of the device",
+        "max_attempts": "Maximum number of attempts for requests",
     },
 ):
     """An interface for the Seneca Z-8AI analogue input module.
@@ -66,6 +67,7 @@ class Z8AI(
         max_temp: int = Z8AI_MAX_TEMP,
         min_millivolt: int = Z8AI_MIN_MILLIVOLT,
         max_millivolt: int = Z8AI_MAX_MILLIVOLT,
+        max_attempts: int = 3,
     ) -> None:
         """Create a new Z8AI.
 
@@ -76,10 +78,15 @@ class Z8AI(
             max_temp: The maximum temperature limit of the device.
             min_millivolt: The minimum voltage output (millivolts) of the device.
             max_millivolt: The maximum voltage output (millivolts) of the device.
+            max_attempts: Maximum number of attempts for requests.
         """
         SerialDevice.__init__(self, port, baudrate)
         TemperatureMonitorBase.__init__(self)
 
+        if max_attempts < 1:
+            raise ValueError("max_attempts must be at least 1")
+
+        self.max_attempts = max_attempts
         self.MIN_TEMP = min_temp
         self.MAX_TEMP = max_temp
         self.MIN_MILLIVOLT = min_millivolt
@@ -111,7 +118,7 @@ class Z8AI(
         return data
 
     def request_read(self) -> None:
-        """Write a message to the Z8AI to prepare for a read operation.
+        """Write a message to the Z-8AI to prepare for a read operation.
 
         A byte array of [1, 3, 0, 2, 0, 8, 229, 204] is written to the device as a
         request to read the data. This byte array was taken from the original C# code.
@@ -122,16 +129,19 @@ class Z8AI(
         self.serial.write(bytearray([1, 3, 0, 2, 0, 8, 229, 204]))
 
     def parse_data(self, data: bytes) -> numpy.ndarray:
-        """Parse temperature data read from the Z8AI.
+        """Parse temperature data read from the Z-8AI.
 
-        The sequence of bytes is put through the conversion function and translated
-        into floats.
+        The sequence of bytes is put through the conversion function and translated into
+        floats.
 
         Args:
             data: The bytes read from the device.
 
         Returns:
             An array containing the temperature values recorded by the Z-8AI device.
+
+        Raises:
+            Z8AIError: CRC validation failed
         """
         crc = calculate_crc(data)
         check = numpy.frombuffer(data[19:], numpy.dtype(numpy.uint16))
@@ -178,6 +188,10 @@ class Z8AI(
 
     def get_temperatures(self) -> Sequence:
         """Get the current temperatures."""
-        self.request_read()
-        data = self.read()
-        return self.parse_data(data).tolist()
+
+        def attempt() -> Sequence:
+            self.request_read()
+            data = self.read()
+            return self.parse_data(data).tolist()
+
+        return retry_request(attempt, self.max_attempts, Z8AIError)
