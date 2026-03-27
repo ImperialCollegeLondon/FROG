@@ -40,6 +40,5 @@ nav:
   - Hardware: hardware.md
   - Hardware sets: hardware_sets.md
   - Measure scripts: measure_scripts.md
-  - DECADES: decades.md
   # defer to gen-files + literate-nav
   - Code Reference: reference/

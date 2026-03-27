@@ -54,22 +54,6 @@ EM27_SENSORS_POLL_INTERVAL = 60.0
 DEFAULT_EM27_HTTP_TIMEOUT = 20.0
 """The default HTTP timeout for the EM27Sensors and OPUSInterface devices."""
 
-DECADES_HOST = "localhost"
-"""The IP address or hostname of the DECADES server."""
-
-DECADES_URL = "http://{host}/decades"
-"""The URL of the DECADES sensor data endpoint."""
-
-DECADES_POLL_INTERVAL = 5.0
-"""Poll rate for DECADES sensors."""
-
-DEFAULT_DECADES_PARAMETERS = (
-    "static_pressure",
-    "gin_altitude",
-    "deiced_true_air_temp_c",
-)
-"""Default DECADES parameters to request."""
-
 DEFAULT_HTTP_TIMEOUT = 10.0
 """How long to wait for a response from a server for."""
 
