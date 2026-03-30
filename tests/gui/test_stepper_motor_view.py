@@ -59,7 +59,7 @@ def test_goto_clicked(sendmsg_mock: MagicMock, qtbot: QtBot) -> None:
     control = StepperMotorControl()
 
     with patch.object(control.angle, "value") as angle_mock:
-        angle_mock.return_value = 123
+        angle_mock.return_value = 123.0
 
         # The motor should be stopped then moved to 123°
         control._preset_clicked(control.goto)
@@ -82,7 +82,7 @@ def test_update_mirror_position_display(qtbot: QtBot) -> None:
     control._update_preset_angles({"zenith": 180.0})
 
     control._update_mirror_position_display(moved_to=180.0)
-    assert control.mirror_position_display.text() == "180\u00b0 (zenith)"
+    assert control.mirror_position_display.text() == "180.0\u00b0 (zenith)"
 
     control._update_mirror_position_display(moved_to=12.34)
-    assert control.mirror_position_display.text() == "12\u00b0"
+    assert control.mirror_position_display.text() == "12.3\u00b0"

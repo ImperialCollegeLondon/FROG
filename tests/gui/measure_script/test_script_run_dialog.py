@@ -116,7 +116,7 @@ def test_update(
             )
 
 
-@pytest.mark.parametrize("angle,angle_str", ((90.0, "90°"), ["zenith"] * 2))
+@pytest.mark.parametrize("angle,angle_str", ((90.0, "90.0°"), ["zenith"] * 2))
 def test_on_start_moving(
     angle: float | str,
     angle_str: str,
