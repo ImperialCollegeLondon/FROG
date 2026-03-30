@@ -108,10 +108,10 @@ class Z8AI(
             SerialException: Error reading from the device
             Z8AIError: Malformed message received from device
         """
-        data = self.serial.read(size=21)
-
         # require 21 bytes else checks will fail
         min_length = 21
+        data = self.serial.read(size=min_length)
+
         if len(data) != min_length:
             raise Z8AIError("Insufficient data read from device")
 
