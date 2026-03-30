@@ -8,9 +8,9 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_mock import MockerFixture
-from serial import SerialException
 
-from frog.hardware.plugins.temperature.tc4820 import TC4820, MalformedMessageError
+from frog.hardware.device import RetryFailedError
+from frog.hardware.plugins.temperature.tc4820 import TC4820, TC4820Error
 
 _SERIAL_ARGS = ("COM1", 9600)
 
@@ -62,7 +62,7 @@ def _get_message(len: int) -> tuple[int, bytes, Any]:
     return (
         value,
         f"*{substr}{checksum(value):0{2}x}^".encode("ascii"),
-        does_not_raise() if len == 4 else pytest.raises(MalformedMessageError),
+        does_not_raise() if len == 4 else pytest.raises(TC4820Error),
     )
 
 
@@ -75,9 +75,9 @@ _TERM_CHARS = sorted(set("*^").intersection(map(chr, range(0, 128, 10))))
     chain(
         # This is a special message indicating that we provided a bad checksum to the
         # device
-        [(0, b"*XXXX60^", pytest.raises(MalformedMessageError))],
+        [(0, b"*XXXX60^", pytest.raises(TC4820Error))],
         # Non-hex value for number
-        [(0, b"*$$$$90^", pytest.raises(MalformedMessageError))],
+        [(0, b"*$$$$90^", pytest.raises(TC4820Error))],
         # Check that only valid start and end terminators work
         [
             (
@@ -85,7 +85,7 @@ _TERM_CHARS = sorted(set("*^").intersection(map(chr, range(0, 128, 10))))
                 f"{start}0000c0{end}".encode("ascii"),
                 does_not_raise()
                 if start == "*" and end == "^"
-                else pytest.raises(MalformedMessageError),
+                else pytest.raises(TC4820Error),
             )
             for end in _TERM_CHARS
             for start in _TERM_CHARS
@@ -99,7 +99,7 @@ _TERM_CHARS = sorted(set("*^").intersection(map(chr, range(0, 128, 10))))
                 format_message(value, csum),
                 does_not_raise()
                 if checksum(value) == csum
-                else pytest.raises(MalformedMessageError),
+                else pytest.raises(TC4820Error),
             )
             for value in (0x0000, 0x1234, 0x5678)
             for csum in range(0x100)
@@ -130,7 +130,7 @@ def test_write(value: int, dev: TC4820) -> None:
         (
             max_attempts,
             fail_max,
-            pytest.raises(SerialException)
+            pytest.raises(RetryFailedError)
             if fail_max >= max_attempts
             else does_not_raise(),
         )
@@ -154,7 +154,7 @@ def test_request_int(
         nonlocal fail_count
         if fail_count < fail_max:
             fail_count += 1
-            raise MalformedMessageError()
+            raise TC4820Error()
 
         return 0
 

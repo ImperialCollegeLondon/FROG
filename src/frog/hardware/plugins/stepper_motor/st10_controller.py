@@ -12,14 +12,15 @@ from enum import IntFlag
 from queue import Queue
 
 from PySide6.QtCore import QThread, QTimer, Signal
-from serial import Serial, SerialException, SerialTimeoutException
+from serial import Serial, SerialTimeoutException
 
 from frog.config import STEPPER_MOTOR_HOMING_TIMEOUT
+from frog.hardware.device import DeviceError
 from frog.hardware.plugins.stepper_motor.stepper_motor_base import StepperMotorBase
 from frog.hardware.serial_device import SerialDevice
 
 
-class ST10ControllerError(SerialException):
+class ST10ControllerError(DeviceError):
     """Indicates that an error has occurred with the ST10 controller."""
 
 

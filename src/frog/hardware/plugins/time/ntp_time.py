@@ -12,10 +12,11 @@ from frog.config import (
     TIME_NTP_TIMEOUT,
     TIME_NTP_VERSION,
 )
+from frog.hardware.device import DeviceError
 from frog.hardware.plugins.time.time_base import TimeBase
 
 
-class NTPTimeError(Exception):
+class NTPTimeError(DeviceError):
     """Indicates that an error occurred while querying the NTP time server."""
 
 

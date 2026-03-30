@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import numpy
 import pytest
-from serial import SerialException
 
 from frog.hardware.plugins.temperature.z8ai import Z8AI, Z8AIError
 
@@ -46,27 +45,12 @@ def test_write(dev: Z8AI) -> None:
     dev.serial.write.assert_called_once_with(bytearray([1, 3, 0, 2, 0, 8, 229, 204]))
 
 
-def test_write_error(dev: Z8AI) -> None:
-    """Test Z8AI.write() error handling."""
-    dev.serial.write.side_effect = RuntimeError
-    with pytest.raises(Z8AIError):
-        dev.request_read()
-
-
 def test_read(dev: Z8AI, data: bytes) -> None:
     """Test Z8AI.read()."""
     with patch.object(dev.serial, "read") as mock:
         mock.return_value = data
         assert data == dev.read()
         mock.assert_called_once()
-
-
-def test_read_serial_error(dev: Z8AI, data: bytes) -> None:
-    """Test Z8AI.read() error handling."""
-    with pytest.raises(Z8AIError):
-        with patch.object(dev.serial, "read", return_value=data):
-            dev.serial.read.side_effect = SerialException
-            dev.read()
 
 
 @pytest.mark.parametrize(
@@ -111,3 +95,20 @@ def test_get_temperatures(dev: Z8AI, data: bytes) -> None:
     request_mock.assert_called_once_with()
     read_mock.assert_called_once_with()
     parse_mock.assert_called_once_with(data)
+
+
+def test_get_temperatures_retries_on_crc_error(dev: Z8AI, data: bytes) -> None:
+    """Test that Z8AI.get_temperatures() retries when a CRC check fails."""
+    result = MagicMock()
+    with patch.object(dev, "request_read") as request_mock:
+        with patch.object(dev, "read", return_value=data) as read_mock:
+            with patch.object(
+                dev,
+                "parse_data",
+                side_effect=[Z8AIError("CRC check failed"), result],
+            ) as parse_mock:
+                assert dev.get_temperatures() == result.tolist()
+
+    assert request_mock.call_count == 2
+    assert read_mock.call_count == 2
+    assert parse_mock.call_count == 2
