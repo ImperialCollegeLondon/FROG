@@ -76,13 +76,39 @@ def test_indicate_moving(qtbot: QtBot) -> None:
     assert control.mirror_position_display.text() == "Moving..."
 
 
-def test_update_mirror_position_display(qtbot: QtBot) -> None:
-    """Test the mirror position display updates correctly."""
+def test_on_move_end(qtbot: QtBot) -> None:
+    """Test the control updates correctly when the motor has finished moving."""
     control = StepperMotorControl()
-    control._update_preset_angles({"zenith": 180.0})
+    control._update_preset_angles({"zenith": 180.0, "nadir": 0.0})
 
-    control._update_mirror_position_display(moved_to=180.0)
-    assert control.mirror_position_display.text() == "180.0\u00b0 (zenith)"
+    # Get the preset buttons for testing
+    zenith_btn = next(
+        btn for btn in control.button_group.buttons() if btn.text() == "ZENITH"
+    )
+    nadir_btn = next(
+        btn for btn in control.button_group.buttons() if btn.text() == "NADIR"
+    )
 
-    control._update_mirror_position_display(moved_to=12.34)
-    assert control.mirror_position_display.text() == "12.3\u00b0"
+    # Test moving to a preset position - should check the corresponding button
+    control._on_move_end(moved_to=180.0)
+    assert control.mirror_position_display.text() == "180.0° (zenith)"
+    assert zenith_btn.isChecked()
+    assert not nadir_btn.isChecked()
+
+    # Test moving to a different preset - should check new button and uncheck old one
+    control._on_move_end(moved_to=0.0)
+    assert control.mirror_position_display.text() == "0.0° (nadir)"
+    assert nadir_btn.isChecked()
+    assert not zenith_btn.isChecked()
+
+    # Test moving to a non-preset position - should uncheck any checked button
+    control._on_move_end(moved_to=12.34)
+    assert control.mirror_position_display.text() == "12.3°"
+    assert not zenith_btn.isChecked()
+    assert not nadir_btn.isChecked()
+
+    # Test tolerance - position within 0.05 degrees should still match preset
+    control._on_move_end(moved_to=179.98)  # within tolerance of 180.0
+    assert control.mirror_position_display.text() == "180.0° (zenith)"
+    assert zenith_btn.isChecked()
+    assert not nadir_btn.isChecked()

@@ -65,7 +65,7 @@ class StepperMotorControl(DevicePanel):
             f"device.{STEPPER_MOTOR_TOPIC}.move.begin",
         )
         pub.subscribe(
-            self._update_mirror_position_display,
+            self._on_move_end,
             f"device.{STEPPER_MOTOR_TOPIC}.move.end",
         )
 
@@ -91,15 +91,38 @@ class StepperMotorControl(DevicePanel):
         """Update the display the indicate that the mirror is moving."""
         self.mirror_position_display.setText("Moving...")
 
-    def _update_mirror_position_display(self, moved_to: float) -> None:
-        """Display the angle the mirror has moved to.
+    def _on_move_end(self, moved_to: float) -> None:
+        """Update the control to show the angle that the mirror has moved to.
 
-        If angle corresponds to a preset, show the associated name as well as the value.
+        This is displayed in a text label, which will include the preset name, if the
+        angle (approximately) corresponds to a preset. The relevant preset button will
+        also be checked/unchecked as appropriate.
         """
         text = f"{moved_to:.1f}°"
         if preset := next(
             (k for k, v in self.angle_presets.items() if abs(v - moved_to) <= 0.05),
             None,
         ):
+            # If this angle corresponds to a preset, include name in label
             text += f" ({preset})"
+
+            # Also check the corresponding preset button
+            preset_upper = preset.upper()
+            btn = next(
+                btn for btn in self.button_group.buttons() if btn.text() == preset_upper
+            )
+            btn.setChecked(True)
+        elif btn := self.button_group.checkedButton():
+            # This angle isn't a preset. If there is a button already checked, uncheck
+            # it.
+            #
+            # Alas, you can't uncheck a button if it's in an exclusive group, as here,
+            # so we make the group non-exclusive, uncheck the button, then make the
+            # group exclusive again.
+            #
+            # See: https://forum.qt.io/topic/6419/how-to-uncheck-button-in-qbuttongroup
+            self.button_group.setExclusive(False)
+            btn.setChecked(False)
+            self.button_group.setExclusive(True)
+
         self.mirror_position_display.setText(text)
