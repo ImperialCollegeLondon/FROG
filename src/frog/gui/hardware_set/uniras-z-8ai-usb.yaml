@@ -1,0 +1,34 @@
+version: 1
+name: UNIRAS (Z-8AI USB)
+devices:
+  stepper_motor:
+    class_name: stepper_motor.st10_controller.ST10Controller
+    params:
+      port: COM43
+      baudrate: 9600
+      timeout: 5.0
+      nadir_offset: 113.0
+      hot_bb_angle: 100.0
+      cold_bb_angle: 255.0
+  temperature_controller.hot_bb:
+    class_name: temperature.tc4820.TC4820
+    params:
+      port: COM41
+      baudrate: 115200
+      max_attempts: 3
+  temperature_controller.cold_bb:
+    class_name: temperature.tc4820.TC4820
+    params:
+      port: COM42
+      baudrate: 115200
+      max_attempts: 3
+  temperature_monitor:
+    class_name: temperature.z8ai.Z8AI
+    params:
+      port: 0403:6001
+      baudrate: 57600
+      min_temp: -80
+      max_temp: 105
+      min_millivolt: 4
+      max_millivolt: 20
+      max_attempts: 6
