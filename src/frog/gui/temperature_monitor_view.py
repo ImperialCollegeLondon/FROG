@@ -60,7 +60,7 @@ class TemperatureMonitorControl(DevicePanel):
         layout.addWidget(QLabel("Pt 100"), 1, 0)
         self._channels = []
         for i in range(self._num_channels):
-            channel_label = QLabel(f"CH_{i + 1}")
+            channel_label = QLabel(f"CH{i + 1}")
             channel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(channel_label, 0, i + 1)
 
