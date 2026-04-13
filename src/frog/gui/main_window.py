@@ -12,12 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from frog.config import (
-    APP_NAME,
-    APP_VERSION,
-    TEMPERATURE_MONITOR_COLD_BB_IDX,
-    TEMPERATURE_MONITOR_HOT_BB_IDX,
-)
+from frog.config import APP_NAME, APP_VERSION
 from frog.gui.data_file_view import DataFileControl
 from frog.gui.docs_view import DocsViewer
 from frog.gui.hardware_set.hardware_sets_view import HardwareSetsControl
@@ -92,12 +87,8 @@ class MainWindow(QMainWindow):
 
         bb_monitor: QGroupBox = TemperaturePlot()
         temp_monitor: QGroupBox = TemperatureMonitorControl()
-        tc_hot: QGroupBox = TemperatureControllerControl(
-            "hot", TEMPERATURE_MONITOR_HOT_BB_IDX, allow_update=True
-        )
-        tc_cold: QGroupBox = TemperatureControllerControl(
-            "cold", TEMPERATURE_MONITOR_COLD_BB_IDX, allow_update=False
-        )
+        tc_hot: QGroupBox = TemperatureControllerControl("hot", allow_update=True)
+        tc_cold: QGroupBox = TemperatureControllerControl("cold", allow_update=False)
 
         layout_right.addWidget(bb_monitor, 1, 0, 1, 2)
         layout_right.addWidget(temp_monitor, 2, 0, 1, 2)

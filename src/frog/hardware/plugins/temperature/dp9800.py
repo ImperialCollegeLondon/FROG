@@ -94,15 +94,25 @@ class DP9800(SerialDevice, TemperatureMonitorBase, description="DP9800"):
     https://assets.omega.com/manuals/M5210.pdf
     """
 
-    def __init__(self, port: str, baudrate: int = 38400) -> None:
+    def __init__(
+        self,
+        hot_bb_channel: str,
+        cold_bb_channel: str,
+        port: str,
+        baudrate: int = 38400,
+    ) -> None:
         """Create a new DP9800.
 
         Args:
+            hot_bb_channel: Channel name for hot black body
+            cold_bb_channel: Channel name for cold black body
             port: Name/description of serial port
             baudrate: Baud rate of port
         """
         SerialDevice.__init__(self, port, baudrate)
-        TemperatureMonitorBase.__init__(self)
+        TemperatureMonitorBase.__init__(
+            self, hot_bb_channel=hot_bb_channel, cold_bb_channel=cold_bb_channel
+        )
 
     def get_device_settings(self, sysflag: str) -> dict[str, str]:
         """Provide the settings of the device as stored in the system flag.

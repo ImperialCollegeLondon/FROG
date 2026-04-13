@@ -1,6 +1,6 @@
 """Panel showing a plot of temperatures."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from functools import partial
 
@@ -17,12 +17,11 @@ from PySide6.QtWidgets import (
 )
 
 from frog.config import (
-    TEMPERATURE_MONITOR_COLD_BB_IDX,
-    TEMPERATURE_MONITOR_HOT_BB_IDX,
     TEMPERATURE_MONITOR_POLL_INTERVAL,
     TEMPERATURE_MONITOR_TOPIC,
     TEMPERATURE_PLOT_TIME_RANGE,
 )
+from frog.device_info import DeviceInstanceRef
 
 
 class TemperaturePlot(QGroupBox):
@@ -32,9 +31,19 @@ class TemperaturePlot(QGroupBox):
         """Creates a panel with a graph to monitor the blackbody temperatures."""
         super().__init__("BB Monitor")
 
+        self._temperature_idx: Mapping[str, int] = {}
+
         layout = self._create_controls()
         self.setLayout(layout)
 
+        pub.subscribe(
+            self._set_temperature_idx,
+            f"device.{TEMPERATURE_MONITOR_TOPIC}.temperature_idx",
+        )
+        pub.subscribe(
+            self._unset_temperature_idx,
+            f"device.closed.{TEMPERATURE_MONITOR_TOPIC}",
+        )
         pub.subscribe(
             self._plot_bb_temps, f"device.{TEMPERATURE_MONITOR_TOPIC}.data.response"
         )
@@ -160,6 +169,14 @@ class TemperaturePlot(QGroupBox):
         self._ax["hot"].autoscale()
         self._ax["cold"].autoscale()
 
+    def _set_temperature_idx(self, temperature_idx: Mapping[str, int]) -> None:
+        """Update the temperature channels being plotted."""
+        self._temperature_idx = temperature_idx
+
+    def _unset_temperature_idx(self, instance: DeviceInstanceRef) -> None:
+        """Unset the temperature channels being plotted on device close."""
+        self._temperature_idx = {}
+
     def _plot_bb_temps(self, time: datetime, temperatures: Sequence) -> None:
         """Extract blackbody temperatures and plot them.
 
@@ -167,7 +184,15 @@ class TemperaturePlot(QGroupBox):
             time: the time that the temperatures were read
             temperatures: the list of current temperatures
         """
-        hot_bb_temp = float(temperatures[TEMPERATURE_MONITOR_HOT_BB_IDX])
-        cold_bb_temp = float(temperatures[TEMPERATURE_MONITOR_COLD_BB_IDX])
+        hot_bb_idx = self._temperature_idx.get("hot_bb", None)
+        hot_bb_temp = (
+            float(temperatures[hot_bb_idx]) if hot_bb_idx is not None else float("nan")
+        )
+        cold_bb_idx = self._temperature_idx.get("cold_bb", None)
+        cold_bb_temp = (
+            float(temperatures[cold_bb_idx])
+            if cold_bb_idx is not None
+            else float("nan")
+        )
 
         self._update_figure(time.timestamp(), hot_bb_temp, cold_bb_temp)

@@ -1,6 +1,6 @@
 """Provides a widget for interacting with temperature controllers."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 
@@ -29,12 +29,11 @@ from frog.gui.led_icon import LEDIcon
 class TemperatureControllerControl(DevicePanel):
     """A widget to interact with temperature controllers."""
 
-    def __init__(self, name: str, temperature_idx: int, allow_update: bool) -> None:
+    def __init__(self, name: str, allow_update: bool) -> None:
         """Create a new TemperatureControllerControl.
 
         Args:
             name: Name of the blackbody the temperature controller is controlling
-            temperature_idx: Index of the blackbody on the temperature monitor
             allow_update: Whether to allow modifying the temperature
         """
         super().__init__(
@@ -43,7 +42,7 @@ class TemperatureControllerControl(DevicePanel):
         )
         self._name = name
         self._poll_interval = 1000 * TEMPERATURE_CONTROLLER_POLL_INTERVAL
-        self._temperature_idx = temperature_idx
+        self._temperature_idx: int | None = None
 
         layout = self._create_controls(allow_update)
         self.setLayout(layout)
@@ -53,6 +52,14 @@ class TemperatureControllerControl(DevicePanel):
             QSizePolicy.Policy.Fixed,
         )
 
+        pub.subscribe(
+            self._set_temperature_idx,
+            f"device.{TEMPERATURE_MONITOR_TOPIC}.temperature_idx",
+        )
+        pub.subscribe(
+            self._unset_temperature_idx,
+            f"device.closed.{TEMPERATURE_MONITOR_TOPIC}",
+        )
         pub.subscribe(
             self._begin_polling,
             f"device.opened.{TEMPERATURE_CONTROLLER_TOPIC}.{name}_bb",
@@ -136,6 +143,16 @@ class TemperatureControllerControl(DevicePanel):
 
         return layout
 
+    def _set_temperature_idx(self, temperature_idx: Mapping[str, int]) -> None:
+        """Update the temperature channel that this controller corresponds to."""
+        self._temperature_idx = temperature_idx[f"{self._name}_bb"]
+        self._pt100_val.setText("")
+
+    def _unset_temperature_idx(self, instance: DeviceInstanceRef) -> None:
+        """Unset the temperature channel on device close."""
+        self._temperature_idx = None
+        self._pt100_val.setText("")
+
     def _on_update_clicked(self) -> None:
         isDown = self._update_pbtn.isChecked()
         if isDown:
@@ -191,7 +208,10 @@ class TemperatureControllerControl(DevicePanel):
             temperatures: list of temperatures retrieved from device
             time: the timestamp at which the properties were sent
         """
-        self._pt100_val.setText(f"{temperatures[self._temperature_idx]: .2f}")
+        if self._temperature_idx is None:
+            self._pt100_val.setText("")
+        else:
+            self._pt100_val.setText(f"{temperatures[self._temperature_idx]: .2f}")
 
     def _set_new_set_point(self) -> None:
         """Send new target temperature to temperature controller."""

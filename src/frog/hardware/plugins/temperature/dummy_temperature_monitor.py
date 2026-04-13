@@ -27,9 +27,18 @@ class DummyTemperatureMonitor(
     """A dummy temperature monitor for GUI testing."""
 
     def __init__(
-        self, temperature_params: Sequence[NoiseParameters] = _DEFAULT_TEMP_PARAMS
+        self,
+        hot_bb_channel: str,
+        cold_bb_channel: str,
+        temperature_params: Sequence[NoiseParameters] = _DEFAULT_TEMP_PARAMS,
     ) -> None:
-        """Create a new DummyTemperatureMonitor."""
+        """Create a new DummyTemperatureMonitor.
+
+        Args:
+            hot_bb_channel: Channel name for hot black body
+            cold_bb_channel: Channel name for cold black body
+            temperature_params: Parameters for generating temperatures
+        """
         if len(temperature_params) != NUM_TEMPERATURE_MONITOR_CHANNELS:
             raise ValueError(
                 f"Must provide {NUM_TEMPERATURE_MONITOR_CHANNELS} parameters"
@@ -40,7 +49,7 @@ class DummyTemperatureMonitor(
             for params in temperature_params
         ]
 
-        super().__init__()
+        super().__init__(hot_bb_channel=hot_bb_channel, cold_bb_channel=cold_bb_channel)
 
     def get_temperatures(self) -> Sequence:
         """Get current temperatures."""

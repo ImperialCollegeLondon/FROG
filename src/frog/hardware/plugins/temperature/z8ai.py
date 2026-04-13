@@ -61,6 +61,8 @@ class Z8AI(
 
     def __init__(
         self,
+        hot_bb_channel: str,
+        cold_bb_channel: str,
         port: str,
         baudrate: int = 57600,
         min_temp: int = Z8AI_MIN_TEMP,
@@ -72,6 +74,8 @@ class Z8AI(
         """Create a new Z8AI.
 
         Args:
+            hot_bb_channel: Channel name for hot black body
+            cold_bb_channel: Channel name for cold black body
             port: Description of USB port (vendor ID + product ID)
             baudrate: Baud rate of port
             min_temp: The minimum temperature limit of the device.
@@ -81,7 +85,9 @@ class Z8AI(
             max_attempts: Maximum number of attempts for requests.
         """
         SerialDevice.__init__(self, port, baudrate)
-        TemperatureMonitorBase.__init__(self)
+        TemperatureMonitorBase.__init__(
+            self, hot_bb_channel=hot_bb_channel, cold_bb_channel=cold_bb_channel
+        )
 
         if max_attempts < 1:
             raise ValueError("max_attempts must be at least 1")

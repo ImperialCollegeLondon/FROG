@@ -28,6 +28,8 @@ devices:
       port: "0403:6001"
       baudrate: 57600
       max_attempts: 3
+      hot_bb_channel: CH7
+      cold_bb_channel: CH8
   sensors:
     class_name: sensors.em27_sensors.EM27Sensors
   spectrometer:
