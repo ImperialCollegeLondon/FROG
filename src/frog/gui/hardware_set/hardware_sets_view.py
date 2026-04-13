@@ -36,15 +36,15 @@ def _get_last_selected_hardware_set() -> HardwareSet | None:
     if not last_selected_path:
         return None
 
-    try:
-        return next(
+    # Return last selected or None
+    return next(
+        (
             hw_set
             for hw_set in get_hardware_sets()
             if str(hw_set.file_path) == last_selected_path
-        )
-    except StopIteration:
-        # No hardware set matching this path
-        return None
+        ),
+        None,
+    )
 
 
 class HardwareSetNameDialog(QDialog):
