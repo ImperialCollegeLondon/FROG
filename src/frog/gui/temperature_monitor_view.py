@@ -97,12 +97,12 @@ class TemperatureMonitorControl(DevicePanel):
 
     def _update_label_colours(self, temperature_idx: Mapping[str, int]) -> None:
         """Change the colours of the labels to show which are the hot and cold."""
-        colours = {temperature_idx["hot_bb"]: "red", temperature_idx["cold_bb"]: "blue"}
+        styles = {
+            temperature_idx["hot_bb"]: "color: red",
+            temperature_idx["cold_bb"]: "color: blue",
+        }
         for idx, label in enumerate(self._labels):
-            if colour := colours.get(idx, None):
-                label.setStyleSheet(f"color: {colour}")
-            else:
-                label.setStyleSheet("")
+            label.setStyleSheet(styles.get(idx, ""))
 
     def _reset_label_colours(self, instance: DeviceInstanceRef) -> None:
         """Reset the label colours."""
