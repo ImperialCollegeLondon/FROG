@@ -7,13 +7,13 @@ import pytest
 
 from frog.hardware.plugins.temperature.z8ai import Z8AI, Z8AIError
 
-_SERIAL_ARGS = ("0403:6001 AB0LMVI5A", 57600)
+_Z8AI_ARGS = ("CH7", "CH8", "0403:6001 AB0LMVI5A", 57600)
 
 
 @pytest.fixture
 def dev(serial_mock: MagicMock) -> Z8AI:
     """Get an instance of a Seneca Z-8AI object."""
-    return Z8AI(*_SERIAL_ARGS)
+    return Z8AI(*_Z8AI_ARGS)
 
 
 @pytest.fixture
@@ -25,14 +25,14 @@ def data() -> bytes:
 def test_init(serial_mock: MagicMock) -> None:
     """Test Seneca Z-8AI's constructor."""
     # Test default values
-    dev = Z8AI(*_SERIAL_ARGS)
+    dev = Z8AI(*_Z8AI_ARGS)
     assert dev.MIN_TEMP == -80
     assert dev.MAX_TEMP == 105
     assert dev.MIN_MILLIVOLT == 4
     assert dev.MAX_MILLIVOLT == 20
 
     # Test arg values
-    dev = Z8AI(*_SERIAL_ARGS, 1, 2, 3, 4)
+    dev = Z8AI(*_Z8AI_ARGS, 1, 2, 3, 4)
     assert dev.MIN_TEMP == 1
     assert dev.MAX_TEMP == 2
     assert dev.MIN_MILLIVOLT == 3

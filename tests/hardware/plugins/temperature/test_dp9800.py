@@ -37,7 +37,7 @@ def data() -> bytes:
 @pytest.fixture
 def dev(serial_mock: MagicMock) -> DP9800:
     """Get an instance of a DP9800 object."""
-    return DP9800("COM1", 38400)
+    return DP9800("CH7", "CH8", "COM1", 38400)
 
 
 def test_check_data(data: bytes) -> None:

@@ -1,6 +1,6 @@
 """Provides a widget to show the current temperatures."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 from pubsub import pub
@@ -17,6 +17,7 @@ from frog.config import (
     TEMPERATURE_MONITOR_POLL_INTERVAL,
     TEMPERATURE_MONITOR_TOPIC,
 )
+from frog.device_info import DeviceInstanceRef
 from frog.gui.device_panel import DevicePanel
 from frog.gui.led_icon import LEDIcon
 
@@ -34,6 +35,7 @@ class TemperatureMonitorControl(DevicePanel):
 
         self._num_channels = num_channels
         self._poll_interval = 1000 * TEMPERATURE_MONITOR_POLL_INTERVAL
+        self._temperature_idx: Mapping[str, int] = {}
 
         layout = self._create_controls()
         self.setLayout(layout)
@@ -43,6 +45,14 @@ class TemperatureMonitorControl(DevicePanel):
             QSizePolicy.Policy.Fixed,
         )
 
+        pub.subscribe(
+            self._update_label_colours,
+            f"device.{TEMPERATURE_MONITOR_TOPIC}.temperature_idx",
+        )
+        pub.subscribe(
+            self._reset_label_colours,
+            f"device.closed.{TEMPERATURE_MONITOR_TOPIC}",
+        )
         pub.subscribe(
             self._update_pt100s, f"device.{TEMPERATURE_MONITOR_TOPIC}.data.response"
         )
@@ -58,11 +68,13 @@ class TemperatureMonitorControl(DevicePanel):
         layout = QGridLayout()
 
         layout.addWidget(QLabel("Pt 100"), 1, 0)
-        self._channels = []
+        self._labels: list[QLabel] = []
+        self._channels: list[QLineEdit] = []
         for i in range(self._num_channels):
-            channel_label = QLabel(f"CH_{i + 1}")
+            channel_label = QLabel(f"CH{i + 1}")
             channel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(channel_label, 0, i + 1)
+            self._labels.append(channel_label)
 
             channel_tbox = QLineEdit()
             channel_tbox.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -82,6 +94,20 @@ class TemperatureMonitorControl(DevicePanel):
         layout.addWidget(self._poll_light, 0, 10, 2, 1)
 
         return layout
+
+    def _update_label_colours(self, temperature_idx: Mapping[str, int]) -> None:
+        """Change the colours of the labels to show which are the hot and cold."""
+        styles = {
+            temperature_idx["hot_bb"]: "color: red",
+            temperature_idx["cold_bb"]: "color: blue",
+        }
+        for idx, label in enumerate(self._labels):
+            label.setStyleSheet(styles.get(idx, ""))
+
+    def _reset_label_colours(self, instance: DeviceInstanceRef) -> None:
+        """Reset the label colours."""
+        for label in self._labels:
+            label.setStyleSheet("")
 
     def _begin_polling(self) -> None:
         """Initiate polling the temperature monitor."""

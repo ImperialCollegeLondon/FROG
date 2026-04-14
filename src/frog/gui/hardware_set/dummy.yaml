@@ -11,6 +11,9 @@ devices:
     class_name: temperature.dummy_temperature_controller.DummyTemperatureController
   temperature_monitor:
     class_name: temperature.dummy_temperature_monitor.DummyTemperatureMonitor
+    params:
+      hot_bb_channel: CH7
+      cold_bb_channel: CH8
   sensors:
     class_name: sensors.dummy_em27_sensors.DummyEM27Sensors
   spectrometer:
