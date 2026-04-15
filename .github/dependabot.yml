@@ -17,6 +17,8 @@ updates:
       # See: https://github.com/imperialcollegelondon/python-template/discussions/530
       - dependency-name: mkdocs
         update-types: [version-update:semver-major]
+      # v2.4 not working: https://github.com/ImperialCollegeLondon/FROG/issues/739
+      - dependency-name: python-statemachine
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
