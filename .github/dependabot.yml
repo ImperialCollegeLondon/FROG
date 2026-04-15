@@ -19,6 +19,7 @@ updates:
         update-types: [version-update:semver-major]
       # v2.4 not working: https://github.com/ImperialCollegeLondon/FROG/issues/739
       - dependency-name: python-statemachine
+        versions: [">=2.4.0"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
