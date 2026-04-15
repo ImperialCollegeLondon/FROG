@@ -35,7 +35,6 @@ class TemperatureMonitorControl(DevicePanel):
 
         self._num_channels = num_channels
         self._poll_interval = 1000 * TEMPERATURE_MONITOR_POLL_INTERVAL
-        self._temperature_idx: Mapping[str, int] = {}
 
         layout = self._create_controls()
         self.setLayout(layout)
