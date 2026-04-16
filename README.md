@@ -32,6 +32,8 @@ This software is currently being adapted as part of a second project &ndash; [UN
 &ndash; to deploy a modified version of the equipment on the UK’s [Facility for Airborne
 Atmospheric Measurements] aircraft.
 
+This work was supported by NERC (grant: NE/Y006216/1) and ESA (contract: 4000137153/22/NL/IA).
+
 [Space and Atmospheric Physics group]: https://www.imperial.ac.uk/physics/research/communities/space-plasma-climate/
 [PySide6 Qt bindings]: https://pypi.org/project/PySide6/
 [FINESSE]: https://www.imperial.ac.uk/a-z-research/space-and-atmospheric-physics/research/missions-and-projects/atmospheric-missions/finesse/

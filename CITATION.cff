@@ -1,9 +1,5 @@
 cff-version: 1.2.0
-message: |
-    If you use this software, please cite it as below.
-
-    This work was supported by NERC (grant: NE/Y006216/1) and ESA (contract:
-    4000137153/22/NL/IA).
+message: If you use this software, please cite it as below.
 title: FROG
 version: 3.0.0
 date-released: 2025-05-02
