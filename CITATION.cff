@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: FROG
+version: 3.0.0
+date-released: 2025-05-02
+authors:
+    - family-names: Dewar
+      given-names: Alex
+      orcid: https://orcid.org/0000-0002-2432-5964
+    - family-names: Cummins
+      given-names: Dan
+      orcid: https://orcid.org/0000-0003-2177-6521
+    - family-names: West
+      given-names: Callum
+    - family-names: Alonso Álvarez
+      given-names: Diego
+      orcid: https://orcid.org/0000-0002-0060-9495
+    - family-names: Turner
+      given-names: James
+      orcid: https://orcid.org/0000-0002-9077-2658
+    - family-names: Murray
+      given-names: Jonathan
+      orcid: https://orcid.org/0000-0002-5400-5128
+    - family-names: Brindley
+      given-names: Helen
+      orcid: https://orcid.org/0000-0002-7859-9207
+license: BSD-3-Clause
+repository-code: https://github.com/ImperialCollegeLondon/FROG
