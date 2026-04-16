@@ -16,7 +16,7 @@ dependencies = [
     #   https://github.com/ImperialCollegeLondon/FROG/issues/909
     "PySide6<6.10.0,>=6.9.0",
     "matplotlib<4.0.0,>=3.10.1",
-    "platformdirs<5.0.0,>=4.2.2",
+    "platformdirs>=4.9.6,<5.0.0",
     "pypubsub<5.0.0,>=4.0.3",
     "pyyaml<7.0,>=6.0",
     "schema<1.0.0,>=0.7.7",
@@ -24,7 +24,7 @@ dependencies = [
     "beautifulsoup4<5.0.0,>=4.12.3",
     # v2.4 not working: https://github.com/ImperialCollegeLondon/FROG/issues/739
     "python-statemachine~=2.3.6",
-    "numpy<3.0.0,>=2.2.4",
+    "numpy>=2.4.4,<3.0.0",
     "decorator<6.0.0,>=5.1.1",
     "pycsvy<1.0.0,>=0.2.3",
     "frozendict<3.0.0,>=2.4.6",
@@ -35,33 +35,33 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3,<10.0",
-    "pytest-cov>=6.1.1,<8.0.0",
+    "pytest>=9.0.3,<10.0",
+    "pytest-cov>=7.1.0,<8.0.0",
     "pytest-mock<4.0.0,>=3.14.0",
     "pre-commit<5.0.0,>=4.2.0",
     "pyinstaller<7.0.0,>=6.11.1",
-    "types-pyyaml<7.0.0.0,>=6.0.12.20250326",
+    "types-pyyaml>=6.0.12.20260408,<7.0.0.0",
     "types-beautifulsoup4<5.0.0.0,>=4.12.0.20240511",
     "pytest-qt<5.0.0,>=4.4.0",
-    "types-decorator<6.0.0.0,>=5.2.0.20250324",
+    "types-decorator>=5.2.0.20260408,<6.0.0.0",
     "pydot>=3.0.4,<5.0.0",
-    "ruff<1.0.0,>=0.11.4",
+    "ruff>=0.15.10,<1.0.0",
     "freezegun<2.0.0,>=1.5.1",
-    "mypy<2.0.0,>=1.15.0",
-    "pytest-xdist[psutil]<4.0.0,>=3.6.1",
+    "mypy>=1.20.1,<2.0.0",
+    "pytest-xdist[psutil]>=3.8.0,<4.0.0",
 ]
 docs = [
     "mkdocs<2.0.0,>=1.6.1",
-    "mkdocstrings>=0.29.0,<2.0.0",
+    "mkdocstrings>=1.0.4,<2.0.0",
     "mkdocstrings-python>=1.13.0,<3.0.0",
-    "mkdocs-material<10.0.0,>=9.6.11",
-    "mkdocs-gen-files<1.0.0,>=0.5.0",
-    "mkdocs-literate-nav<1.0.0,>=0.6.2",
-    "mkdocs-section-index<1.0.0,>=0.3.10",
+    "mkdocs-material>=9.7.6,<10.0.0",
+    "mkdocs-gen-files>=0.6.1,<1.0.0",
+    "mkdocs-literate-nav>=0.6.3,<1.0.0",
+    "mkdocs-section-index>=0.3.11,<1.0.0",
 ]
 
 [build-system]
-requires = ["uv_build>=0.8.3,<0.10.0"]
+requires = ["uv_build>=0.11.7,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.ruff]
