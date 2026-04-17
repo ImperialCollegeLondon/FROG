@@ -1,6 +1,6 @@
 [project]
 name = "FROG"
-version = "3.0.0"
+version = "3.1.0"
 description = "A graphical user interface for controlling and monitoring an interferometer device."
 authors = [
     { name = "Alex Dewar", email = "a.dewar@imperial.ac.uk" },
@@ -24,10 +24,10 @@ dependencies = [
     "beautifulsoup4<5.0.0,>=4.12.3",
     # v2.4 not working: https://github.com/ImperialCollegeLondon/FROG/issues/739
     "python-statemachine~=2.3.6",
-    "numpy<3.0.0,>=2.2.4",
+    "numpy<3.1.0,>=2.2.4",
     "decorator<6.0.0,>=5.1.1",
     "pycsvy<1.0.0,>=0.2.3",
-    "frozendict<3.0.0,>=2.4.6",
+    "frozendict<3.1.0,>=2.4.6",
     "crc<8.0.0,>=7.1.0",
     "ntplib<1.0.0,>=0.4.0",
     "python-slugify>=8.0.4",
@@ -54,7 +54,7 @@ dev = [
 docs = [
     "mkdocs<2.0.0,>=1.6.1",
     "mkdocstrings>=0.29.0,<2.0.0",
-    "mkdocstrings-python>=1.13.0,<3.0.0",
+    "mkdocstrings-python>=1.13.0,<3.1.0",
     "mkdocs-material<10.0.0,>=9.6.11",
     "mkdocs-gen-files<1.0.0,>=0.5.0",
     "mkdocs-literate-nav<1.0.0,>=0.6.2",
@@ -94,7 +94,7 @@ addopts = "-v -p no:warnings -n auto --cov=frog --cov-report=html:htmlcov/covera
 exclude_lines = ["if __name__ == .__main__.:"]
 
 [tool.bumpversion]
-current_version = "3.0.0"
+current_version = "3.1.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
