@@ -110,8 +110,9 @@ allow_dirty = false
 commit = true
 message = "Bump version: {current_version} → {new_version}"
 moveable_tags = []
-commit_args = ""
+commit_args = "--no-verify"
 setup_hooks = []
 pre_commit_hooks = []
 post_commit_hooks = []
 allow_shell_hooks = true
+files = [{filename= "pyproject.toml"}, {filename="CITATION.cff"}]
