@@ -1,6 +1,6 @@
 [project]
 name = "FROG"
-version = "3.0.0"
+version = "3.1.0"
 description = "A graphical user interface for controlling and monitoring an interferometer device."
 authors = [
     { name = "Alex Dewar", email = "a.dewar@imperial.ac.uk" },

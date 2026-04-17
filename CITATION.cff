@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: If you use this software, please cite it as below.
 title: FROG
-version: 3.0.0
-date-released: 2025-05-02
+version: 3.1.0
+date-released: 2026-04-17
 authors:
     - family-names: Dewar
       given-names: Alex
