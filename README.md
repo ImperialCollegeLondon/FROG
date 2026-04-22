@@ -3,6 +3,7 @@
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 ![GitHub tag (with filter)](https://img.shields.io/github/v/tag/ImperialCollegeLondon/FROG)
 [![GitHub](https://img.shields.io/github/license/ImperialCollegeLondon/FROG)](https://raw.githubusercontent.com/ImperialCollegeLondon/FROG/main/LICENCE.txt)
+[![DOI](https://zenodo.org/badge/557238509.svg)](https://doi.org/10.5281/zenodo.19633886)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/ImperialCollegeLondon/FROG/main.svg)](https://results.pre-commit.ci/latest/github/ImperialCollegeLondon/FROG/main)
