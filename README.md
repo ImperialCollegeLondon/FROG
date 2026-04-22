@@ -42,6 +42,12 @@ This work was supported by NERC (grant: NE/Y006216/1) and ESA (contract: 4000137
 [UNIRAS]: https://www.imperial.ac.uk/space-and-atmospheric-physics/research/missions-and-projects/atmospheric-missions/uniras/
 [Facility for Airborne Atmospheric Measurements]: https://www.faam.ac.uk/
 
+## Citing this software
+
+If you use FROG in your research, please cite us, including the version number. For information on how to cite FROG, see [the Zenodo page for the latest release][zenodo-latest].
+
+[zenodo-latest]: https://doi.org/10.5281/zenodo.19633886
+
 ## For developers
 
 Technical documentation is available on [FROG's GitHub Pages site](https://imperialcollegelondon.github.io/FROG/).
