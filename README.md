@@ -1,10 +1,11 @@
-![GitHub tag (with filter)](https://img.shields.io/github/v/tag/ImperialCollegeLondon/FROG)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+![GitHub tag (with filter)](https://img.shields.io/github/v/tag/ImperialCollegeLondon/FROG)
 [![GitHub](https://img.shields.io/github/license/ImperialCollegeLondon/FROG)](https://raw.githubusercontent.com/ImperialCollegeLondon/FROG/main/LICENCE.txt)
+[![DOI](https://zenodo.org/badge/557238509.svg)](https://doi.org/10.5281/zenodo.19633886)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/ImperialCollegeLondon/FROG/main.svg)](https://results.pre-commit.ci/latest/github/ImperialCollegeLondon/FROG/main)
 [![Test and build](https://github.com/ImperialCollegeLondon/FROG/actions/workflows/ci.yml/badge.svg)](https://github.com/ImperialCollegeLondon/FROG/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/ImperialCollegeLondon/FROG/graph/badge.svg?token=4UILYHPMJT)](https://codecov.io/gh/ImperialCollegeLondon/FROG)
@@ -41,6 +42,12 @@ This work was supported by NERC (grant: NE/Y006216/1) and ESA (contract: 4000137
 [PREFIRE]: https://science.nasa.gov/mission/prefire/
 [UNIRAS]: https://www.imperial.ac.uk/space-and-atmospheric-physics/research/missions-and-projects/atmospheric-missions/uniras/
 [Facility for Airborne Atmospheric Measurements]: https://www.faam.ac.uk/
+
+## Citing this software
+
+If you use FROG in your research, please cite us, including the version number. For information on how to cite FROG, see [the Zenodo page for the latest release][zenodo-latest].
+
+[zenodo-latest]: https://doi.org/10.5281/zenodo.19633886
 
 ## For developers
 
