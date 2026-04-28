@@ -15,7 +15,7 @@ dependencies = [
     # PySide6 v6.10 not working with pytest-qt:
     #   https://github.com/ImperialCollegeLondon/FROG/issues/909
     "PySide6<6.10.0,>=6.9.0",
-    "matplotlib<4.0.0,>=3.10.1",
+    "matplotlib>=3.10.9,<4.0.0",
     "platformdirs>=4.9.6,<5.0.0",
     "pypubsub<5.0.0,>=4.0.3",
     "pyyaml<7.0,>=6.0",
@@ -38,16 +38,16 @@ dev = [
     "pytest>=9.0.3,<10.0",
     "pytest-cov>=7.1.0,<8.0.0",
     "pytest-mock<4.0.0,>=3.14.0",
-    "pre-commit<5.0.0,>=4.2.0",
-    "pyinstaller<7.0.0,>=6.11.1",
+    "pre-commit>=4.6.0,<5.0.0",
+    "pyinstaller>=6.20.0,<7.0.0",
     "types-pyyaml>=6.0.12.20260408,<7.0.0.0",
     "types-beautifulsoup4<5.0.0.0,>=4.12.0.20240511",
     "pytest-qt<5.0.0,>=4.4.0",
     "types-decorator>=5.2.0.20260408,<6.0.0.0",
     "pydot>=3.0.4,<5.0.0",
-    "ruff>=0.15.10,<1.0.0",
+    "ruff>=0.15.12,<1.0.0",
     "freezegun<2.0.0,>=1.5.1",
-    "mypy>=1.20.1,<2.0.0",
+    "mypy>=1.20.2,<2.0.0",
     "pytest-xdist[psutil]>=3.8.0,<4.0.0",
 ]
 docs = [
@@ -57,11 +57,11 @@ docs = [
     "mkdocs-material>=9.7.6,<10.0.0",
     "mkdocs-gen-files>=0.6.1,<1.0.0",
     "mkdocs-literate-nav>=0.6.3,<1.0.0",
-    "mkdocs-section-index>=0.3.11,<1.0.0",
+    "mkdocs-section-index>=0.3.12,<1.0.0",
 ]
 
 [build-system]
-requires = ["uv_build>=0.11.7,<0.12.0"]
+requires = ["uv_build>=0.11.8,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.ruff]
