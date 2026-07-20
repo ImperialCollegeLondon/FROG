@@ -267,7 +267,7 @@ class DeviceTypeControl(QGroupBox):
 
         # For some reason we also have to hide the widget else it appears over the
         # others
-        layout.takeAt(1).widget().hide()
+        layout.takeAt(1).widget().hide()  # type: ignore[union-attr]
 
         # Add the widget for the newly selected parameter if needed
         widget = self.current_device_type_widget
