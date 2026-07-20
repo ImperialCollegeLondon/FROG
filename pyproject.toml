@@ -79,6 +79,7 @@ lint.pydocstyle.convention = "google"
 [tool.mypy]
 # Some of the docs scripts give errors, but we don't care
 exclude = "docs"
+exclude_gitignore = true
 
 ignore_missing_imports = true
 
