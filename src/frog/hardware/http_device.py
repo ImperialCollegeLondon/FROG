@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 
@@ -61,6 +61,7 @@ class HTTPDevice(
         if reply.error() != QNetworkReply.NetworkError.NoError:
             raise RuntimeError(f"Network error: {reply.errorString()}")
 
-        # Parse the received message
-        data: bytes = reply.readAll().data()
+        # Parse the received message. The return type is bytes, despite what the type
+        # hint says.
+        data = cast(bytes, reply.readAll().data())
         callback(data.decode())
