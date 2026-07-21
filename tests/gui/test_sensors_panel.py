@@ -53,7 +53,7 @@ def test_get_reading_lineedit() -> None:
     )
     assert isinstance(reading, QLineEdit)
     assert panel._reading_layout.rowCount() == 1
-    reading_name_label = panel._reading_layout.itemAt(0).widget()
+    reading_name_label = panel._reading_layout.itemAt(0).widget()  # type: ignore[union-attr]
     assert isinstance(reading_name_label, QLabel)
     assert reading_name_label.text() == "Quantity1"
 

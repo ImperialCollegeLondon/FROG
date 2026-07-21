@@ -108,10 +108,10 @@ class StepperMotorControl(DevicePanel):
 
             # Also check the corresponding preset button
             preset_upper = preset.upper()
-            btn = next(
+            preset_btn = next(
                 btn for btn in self.button_group.buttons() if btn.text() == preset_upper
             )
-            btn.setChecked(True)
+            preset_btn.setChecked(True)
         elif btn := self.button_group.checkedButton():
             # This angle isn't a preset. If there is a button already checked, uncheck
             # it.
