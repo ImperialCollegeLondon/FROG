@@ -13,8 +13,8 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "pyside6<7.0.0,>=6.11.1",
-    "matplotlib>=3.11.0,<4.0.0",
-    "platformdirs>=4.10.0,<5.0.0",
+    "matplotlib>=3.11.1,<4.0.0",
+    "platformdirs>=4.11.0,<5.0.0",
     "pypubsub<5.0.0,>=4.0.3",
     "pyyaml<7.0,>=6.0",
     "schema<1.0.0,>=0.7.7",
@@ -22,7 +22,7 @@ dependencies = [
     "beautifulsoup4>=4.15.0,<5.0.0",
     # v2.4 not working: https://github.com/ImperialCollegeLondon/FROG/issues/739
     "python-statemachine~=2.3.6",
-    "numpy>=2.5.0,<3.0.0",
+    "numpy>=2.5.1,<3.0.0",
     "decorator>=5.3.1,<6.0.0",
     "pycsvy<1.0.0,>=0.2.3",
     "frozendict<3.0.0,>=2.4.6",
@@ -36,30 +36,30 @@ dev = [
     "pytest>=9.1.1,<10.0",
     "pytest-cov>=7.1.0,<8.0.0",
     "pytest-mock<4.0.0,>=3.14.0",
-    "pre-commit>=4.6.0,<5.0.0",
+    "pre-commit>=4.6.1,<5.0.0",
     "pyinstaller>=6.21.0,<7.0.0",
-    "types-pyyaml>=6.0.12.20260518,<7.0.0.0",
+    "types-pyyaml>=6.0.12.20260724,<7.0.0.0",
     "types-beautifulsoup4<5.0.0.0,>=4.12.0.20240511",
     "pytest-qt<5.0.0,>=4.4.0",
-    "types-decorator>=5.2.0.20260519,<6.0.0.0",
+    "types-decorator>=5.2.0.20260712,<6.0.0.0",
     "pydot>=3.0.4,<5.0.0",
-    "ruff>=0.15.20,<1.0.0",
+    "ruff>=0.16.0,<1.0.0",
     "freezegun<2.0.0,>=1.5.1",
-    "mypy>=2.1.0,<3.0.0",
+    "mypy>=2.3.0,<3.0.0",
     "pytest-xdist[psutil]>=3.8.0,<4.0.0",
 ]
 docs = [
     "mkdocs<2.0.0,>=1.6.1",
-    "mkdocstrings>=1.0.4,<2.0.0",
+    "mkdocstrings>=1.0.6,<2.0.0",
     "mkdocstrings-python>=2.0.5,<3.0.0",
-    "mkdocs-material>=9.7.6,<10.0.0",
+    "mkdocs-material>=9.7.7,<10.0.0",
     "mkdocs-gen-files>=0.6.1,<1.0.0",
     "mkdocs-literate-nav>=0.6.3,<1.0.0",
     "mkdocs-section-index>=0.3.12,<1.0.0",
 ]
 
 [build-system]
-requires = ["uv_build>=0.11.26,<0.12.0"]
+requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
 
 [tool.ruff]
