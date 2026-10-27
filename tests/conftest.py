@@ -47,3 +47,9 @@ def sendmsg_mock(monkeypatch) -> MagicMock:
 
 # Don't actually raise windows etc.
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
+# Stop Qt from loading a native platform theme (e.g. GTK3). On headless machines
+# where GTK is installed (such as sandboxed CI/agent environments), the GTK theme
+# calls gtk_init(), which aborts the process when it cannot open an X display,
+# even though we are using the offscreen platform. Disabling the theme avoids this.
+os.environ["QT_QPA_PLATFORMTHEME"] = ""
