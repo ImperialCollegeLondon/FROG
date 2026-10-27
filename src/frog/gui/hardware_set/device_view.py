@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, cast
 
 from pubsub import pub
+from PySide6.QtCore import QFile
 from PySide6.QtWidgets import (
     QComboBox,
     QGroupBox,
@@ -99,10 +100,22 @@ def load_saved_parameter_values(
         class_name: The device type's class name, used to look up saved values
         param_widgets: A mapping of parameter names to their widgets
     """
-    params = cast(
-        dict[str, Any] | None,
-        settings.value(f"device/params/{class_name}"),
-    )
+    try:
+        params = cast(
+            dict[str, Any] | None,
+            settings.value(f"device/params/{class_name}"),
+        )
+    except Exception:
+        settings_path = settings.fileName()
+        logging.warning(
+            f"Settings file at {settings_path} is corrupted. Moving to recycle bin."
+        )
+        if not QFile.moveToTrash(settings_path):
+            logging.warning(
+                "Failed to move file to recycle bin. It will be overwritten."
+            )
+        return
+
     if not params:
         return
 
