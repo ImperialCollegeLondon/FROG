@@ -90,6 +90,29 @@ ParameterWidget = ComboParameterWidget | TextParameterWidget
 """A type alias for a widget which supports getting and setting a parameter."""
 
 
+def load_saved_parameter_values(
+    class_name: str, param_widgets: Mapping[str, ParameterWidget]
+) -> None:
+    """Set the combo boxes' parameter values according to their saved values.
+
+    Args:
+        class_name: The device type's class name, used to look up saved values
+        param_widgets: A mapping of parameter names to their widgets
+    """
+    params = cast(
+        dict[str, Any] | None,
+        settings.value(f"device/params/{class_name}"),
+    )
+    if not params:
+        return
+
+    for param, value in params.items():
+        try:
+            param_widgets[param].value = value
+        except Exception as error:
+            logging.warn(f"Error while setting param {param}: {error!s}")
+
+
 class DeviceParametersWidget(QWidget):
     """A widget containing controls for setting a device's parameters."""
 
@@ -130,18 +153,7 @@ class DeviceParametersWidget(QWidget):
 
     def load_saved_parameter_values(self) -> None:
         """Set the combo boxes' parameter values according to their saved values."""
-        params = cast(
-            dict[str, Any] | None,
-            settings.value(f"device/params/{self.device_type.class_name}"),
-        )
-        if not params:
-            return
-
-        for param, value in params.items():
-            try:
-                self._param_widgets[param].value = value
-            except Exception as error:
-                logging.warn(f"Error while setting param {param}: {error!s}")
+        load_saved_parameter_values(self.device_type.class_name, self._param_widgets)
 
     @property
     def current_parameter_values(self) -> dict[str, Any]:

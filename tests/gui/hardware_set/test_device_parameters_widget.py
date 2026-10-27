@@ -16,16 +16,19 @@ from frog.gui.hardware_set.device_view import (
 @pytest.fixture
 def widget(qtbot) -> DeviceParametersWidget:
     """A fixture providing a DeviceParametersWidget."""
-    return DeviceParametersWidget(
-        DeviceTypeInfo(
-            "my_class",
-            "My Device",
-            {
-                "param1": DeviceParameter("Parameter 1", range(2)),
-                "param2": DeviceParameter("Parameter 2", int, 0),
-            },
+    # Patch only while the widget is constructed, so the constructor doesn't load
+    # real saved values. The real function is restored for the test body.
+    with patch("frog.gui.hardware_set.device_view.load_saved_parameter_values"):
+        return DeviceParametersWidget(
+            DeviceTypeInfo(
+                "my_class",
+                "My Device",
+                {
+                    "param1": DeviceParameter("Parameter 1", range(2)),
+                    "param2": DeviceParameter("Parameter 2", int, 0),
+                },
+            )
         )
-    )
 
 
 def test_combo_parameter_widget(qtbot) -> None:
