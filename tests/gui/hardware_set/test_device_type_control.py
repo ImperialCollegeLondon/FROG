@@ -21,14 +21,9 @@ DEVICE_TYPES = [
 @pytest.fixture
 def widget(subscribe_mock: MagicMock, qtbot) -> DeviceTypeControl:
     """Create a DeviceTypeControl fixture."""
-    # Patch only while the control is constructed, so setup doesn't touch a real
-    # settings file: neither loading saved parameter values nor reading the
-    # previously-opened device type.
-    with (
-        patch("frog.gui.hardware_set.device_view.load_saved_parameter_values"),
-        patch("frog.gui.hardware_set.device_view.get_setting") as get_setting_mock,
-    ):
-        get_setting_mock.return_value = None
+    # Patch only while the control is constructed, so setup doesn't load real saved
+    # parameter values.
+    with patch("frog.gui.hardware_set.device_view.load_saved_parameter_values"):
         return DeviceTypeControl(
             "Device type", DeviceInstanceRef("base_type"), DEVICE_TYPES
         )

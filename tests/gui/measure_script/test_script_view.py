@@ -18,7 +18,8 @@ from frog.spectrometer_status import SpectrometerStatus
 @patch("frog.gui.measure_script.script_view.get_setting_or_default")
 def script_control(get_setting_or_default_mock: Mock, qtbot: QtBot) -> ScriptControl:
     """Provides a ScriptControl."""
-    # NB: This will need to be changed if we load more than one setting
+    # Return a non-empty path so the widget's line edit is populated; otherwise
+    # try_get_path() would pop a (blocking) file dialog during the run-button tests.
     get_setting_or_default_mock.return_value = "/my/path.yaml"
     return ScriptControl()
 

@@ -5,6 +5,24 @@ from unittest.mock import MagicMock
 
 import pytest
 from pubsub import pub
+from PySide6.QtCore import QSettings
+
+
+@pytest.fixture(autouse=True)
+def isolate_settings(monkeypatch, tmp_path) -> None:
+    """Redirect the global settings object to a temporary file.
+
+    This prevents tests from inadvertently reading from or writing to the real
+    settings file on the developer's machine via ``get_setting``,
+    ``get_setting_or_default`` or ``set_setting``.
+    """
+    import frog.settings
+
+    monkeypatch.setattr(
+        frog.settings,
+        "_settings",
+        QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat),
+    )
 
 
 @pytest.fixture
