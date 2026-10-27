@@ -29,7 +29,7 @@ from frog.gui.hardware_set.device import (
     open_device,
 )
 from frog.gui.led_icon import LEDIcon
-from frog.settings import settings
+from frog.settings import get_setting, settings
 
 
 class ComboParameterWidget(QComboBox):
@@ -101,10 +101,7 @@ def load_saved_parameter_values(
         param_widgets: A mapping of parameter names to their widgets
     """
     try:
-        params = cast(
-            dict[str, Any] | None,
-            settings.value(f"device/params/{class_name}"),
-        )
+        params = get_setting(dict, f"device/params/{class_name}")
     except Exception:
         settings_path = settings.fileName()
         logging.warning(
@@ -231,7 +228,7 @@ class DeviceTypeControl(QGroupBox):
             self._device_widgets.append(widget)
 
         # Select the last device that was successfully opened, if there is one
-        previous_device = cast(str | None, settings.value(f"device/type/{instance!s}"))
+        previous_device = get_setting(str, f"device/type/{instance!s}")
         if previous_device:
             self._select_device(previous_device)
 

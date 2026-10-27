@@ -15,11 +15,11 @@ from frog.spectrometer_status import SpectrometerStatus
 
 
 @pytest.fixture
-@patch("frog.gui.measure_script.script_view.settings")
-def script_control(settings_mock: Mock, qtbot: QtBot) -> ScriptControl:
+@patch("frog.gui.measure_script.script_view.get_setting_or_default")
+def script_control(get_setting_or_default_mock: Mock, qtbot: QtBot) -> ScriptControl:
     """Provides a ScriptControl."""
     # NB: This will need to be changed if we load more than one setting
-    settings_mock.value.return_value = "/my/path.yaml"
+    get_setting_or_default_mock.return_value = "/my/path.yaml"
     return ScriptControl()
 
 
@@ -34,10 +34,12 @@ def click_button(widget: QWidget, text: str) -> None:
     get_button(widget, text).click()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
-def test_init(settings_mock: Mock, subscribe_mock: Mock, qtbot: QtBot) -> None:
+@patch("frog.gui.measure_script.script_view.get_setting_or_default")
+def test_init(
+    get_setting_or_default_mock: Mock, subscribe_mock: Mock, qtbot: QtBot
+) -> None:
     """Test ScriptControl's constructor."""
-    settings_mock.value.return_value = "/my/path.yaml"
+    get_setting_or_default_mock.return_value = "/my/path.yaml"
     script_control = ScriptControl()
     assert not script_control._spectrometer_ready
     assert not script_control._data_file_recording
@@ -62,15 +64,17 @@ def test_init(settings_mock: Mock, subscribe_mock: Mock, qtbot: QtBot) -> None:
     )
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.get_setting_or_default")
 @pytest.mark.parametrize("prev_path", (Path("/my/path.yaml"), ""))
-def test_init_path_setting(settings_mock: Mock, prev_path: Path, qtbot: QtBot) -> None:
+def test_init_path_setting(
+    get_setting_or_default_mock: Mock, prev_path: Path, qtbot: QtBot
+) -> None:
     """Check that the constructor correctly loads previous path from settings."""
-    settings_mock.value.return_value = str(prev_path)
+    get_setting_or_default_mock.return_value = str(prev_path)
     script_control = ScriptControl()
 
     # NB: This will need to be changed if we load more than one setting
-    settings_mock.value.assert_called_once_with("script/run_path", "")
+    get_setting_or_default_mock.assert_called_once_with("script/run_path", "")
 
     # Check that the initial path is correct
     assert script_control.script_path.line_edit.text() == str(prev_path)

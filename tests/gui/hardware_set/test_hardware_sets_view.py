@@ -98,35 +98,43 @@ def test_init(
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_hardware_sets")
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
+@patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
 def test_get_last_selected_hardware_set_cached_success(
-    settings_mock: Mock, get_hw_sets_mock: Mock, hw_sets: Sequence[HardwareSet], qtbot
+    get_setting_mock: Mock,
+    get_hw_sets_mock: Mock,
+    hw_sets: Sequence[HardwareSet],
+    qtbot,
 ) -> None:
     """Test _get_last_selected_hardware_set() when there is a valid value cached."""
     get_hw_sets_mock.return_value = hw_sets[0:1]
-    settings_mock.value.return_value = str(hw_sets[0].file_path)
+    get_setting_mock.return_value = str(hw_sets[0].file_path)
     assert _get_last_selected_hardware_set() is hw_sets[0]
-    settings_mock.value.assert_called_once_with("hardware_set/selected")
+    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_hardware_sets")
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
+@patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
 def test_get_last_selected_hardware_set_cached_fail(
-    settings_mock: Mock, get_hw_sets_mock: Mock, hw_sets: Sequence[HardwareSet], qtbot
+    get_setting_mock: Mock,
+    get_hw_sets_mock: Mock,
+    hw_sets: Sequence[HardwareSet],
+    qtbot,
 ) -> None:
     """Test _get_last_selected_hardware_set() with an unknown path cached."""
     get_hw_sets_mock.return_value = hw_sets[0:1]
-    settings_mock.value.return_value = str(hw_sets[1].file_path)
+    get_setting_mock.return_value = str(hw_sets[1].file_path)
     assert _get_last_selected_hardware_set() is None
-    settings_mock.value.assert_called_once_with("hardware_set/selected")
+    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
 
 
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
-def test_get_last_selected_hardware_set_no_cached(settings_mock: Mock, qtbot) -> None:
+@patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
+def test_get_last_selected_hardware_set_no_cached(
+    get_setting_mock: Mock, qtbot
+) -> None:
     """Test _get_last_selected_hardware_set() when no value is cached."""
-    settings_mock.value.return_value = None
+    get_setting_mock.return_value = None
     assert _get_last_selected_hardware_set() is None
-    settings_mock.value.assert_called_once_with("hardware_set/selected")
+    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
 
 
 DEVICES = [

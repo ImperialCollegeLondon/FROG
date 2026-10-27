@@ -1,7 +1,7 @@
 """Provides a panel for choosing between hardware sets and (dis)connecting."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 from pubsub import pub
 from PySide6.QtWidgets import (
@@ -28,11 +28,11 @@ from frog.gui.hardware_set.hardware_set import (
     get_hardware_sets,
 )
 from frog.gui.hardware_set.hardware_sets_combo_box import HardwareSetsComboBox
-from frog.settings import settings
+from frog.settings import get_setting, settings
 
 
 def _get_last_selected_hardware_set() -> HardwareSet | None:
-    last_selected_path = cast(str | None, settings.value("hardware_set/selected"))
+    last_selected_path = get_setting(str, "hardware_set/selected")
     if not last_selected_path:
         return None
 

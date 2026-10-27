@@ -92,57 +92,59 @@ def test_init(params: Mapping[str, DeviceParameter], qtbot) -> None:
 
 
 @pytest.mark.parametrize("param_name", ("param1", "param2"))
-@patch("frog.gui.hardware_set.device_view.settings")
+@patch("frog.gui.hardware_set.device_view.get_setting")
 def test_load_saved_parameter_values(
-    settings_mock: Mock, param_name: str, widget: DeviceParametersWidget, qtbot
+    get_setting_mock: Mock, param_name: str, widget: DeviceParametersWidget, qtbot
 ) -> None:
     """Test the load_saved_parameter_values() method."""
-    settings_mock.value.return_value = {param_name: 1}
+    get_setting_mock.return_value = {param_name: 1}
     assert widget._param_widgets[param_name].value == 0
     widget.load_saved_parameter_values()
     assert widget._param_widgets[param_name].value == 1
 
 
 @pytest.mark.parametrize("param_name", ("param1", "param2"))
-@patch("frog.gui.hardware_set.device_view.settings")
+@patch("frog.gui.hardware_set.device_view.get_setting")
 def test_load_saved_parameter_values_none_saved(
-    settings_mock: Mock, param_name: str, widget: DeviceParametersWidget, qtbot
+    get_setting_mock: Mock, param_name: str, widget: DeviceParametersWidget, qtbot
 ) -> None:
     """Test the load_saved_parameter_values() method if there are no values saved."""
-    settings_mock.value.return_value = None
+    get_setting_mock.return_value = None
     assert widget._param_widgets[param_name].value == 0
     widget.load_saved_parameter_values()
     assert widget._param_widgets[param_name].value == 0
 
 
-@patch("frog.gui.hardware_set.device_view.settings")
+@patch("frog.gui.hardware_set.device_view.get_setting")
 @patch("frog.gui.hardware_set.device_view.logging.warn")
 def test_load_saved_parameter_values_error(
     warn_mock: Mock,
-    settings_mock: Mock,
+    get_setting_mock: Mock,
     widget: DeviceParametersWidget,
     qtbot,
 ) -> None:
     """Test the load_saved_parameter_values() method ignores errors."""
-    settings_mock.value.return_value = {"made_up": 1}
+    get_setting_mock.return_value = {"made_up": 1}
     widget.load_saved_parameter_values()
     warn_mock.assert_called_once()
 
 
 @pytest.mark.parametrize("param_name", ("param1", "param2"))
 @patch("frog.gui.hardware_set.device_view.QFile")
+@patch("frog.gui.hardware_set.device_view.get_setting")
 @patch("frog.gui.hardware_set.device_view.settings")
 @patch("frog.gui.hardware_set.device_view.logging.warning")
 def test_load_saved_parameter_values_corrupted(
     warning_mock: Mock,
     settings_mock: Mock,
+    get_setting_mock: Mock,
     qfile_mock: Mock,
     param_name: str,
     widget: DeviceParametersWidget,
     qtbot,
 ) -> None:
     """Test that a corrupted settings file is moved to the recycle bin."""
-    settings_mock.value.side_effect = Exception("corrupted")
+    get_setting_mock.side_effect = Exception("corrupted")
     settings_mock.fileName.return_value = "/path/to/settings.ini"
     qfile_mock.moveToTrash.return_value = True
 
@@ -158,18 +160,20 @@ def test_load_saved_parameter_values_corrupted(
 
 @pytest.mark.parametrize("param_name", ("param1", "param2"))
 @patch("frog.gui.hardware_set.device_view.QFile")
+@patch("frog.gui.hardware_set.device_view.get_setting")
 @patch("frog.gui.hardware_set.device_view.settings")
 @patch("frog.gui.hardware_set.device_view.logging.warning")
 def test_load_saved_parameter_values_corrupted_move_fails(
     warning_mock: Mock,
     settings_mock: Mock,
+    get_setting_mock: Mock,
     qfile_mock: Mock,
     param_name: str,
     widget: DeviceParametersWidget,
     qtbot,
 ) -> None:
     """Test the fallback when a corrupted settings file cannot be moved to trash."""
-    settings_mock.value.side_effect = Exception("corrupted")
+    get_setting_mock.side_effect = Exception("corrupted")
     settings_mock.fileName.return_value = "/path/to/settings.ini"
     qfile_mock.moveToTrash.return_value = False
 
