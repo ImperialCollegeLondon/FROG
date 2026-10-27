@@ -7,7 +7,6 @@ from collections.abc import Mapping, Sequence
 from typing import Any, cast
 
 from pubsub import pub
-from PySide6.QtCore import QFile
 from PySide6.QtWidgets import (
     QComboBox,
     QGroupBox,
@@ -29,7 +28,7 @@ from frog.gui.hardware_set.device import (
     open_device,
 )
 from frog.gui.led_icon import LEDIcon
-from frog.settings import get_setting, settings
+from frog.settings import get_setting
 
 
 class ComboParameterWidget(QComboBox):
@@ -100,19 +99,7 @@ def load_saved_parameter_values(
         class_name: The device type's class name, used to look up saved values
         param_widgets: A mapping of parameter names to their widgets
     """
-    try:
-        params = get_setting(dict, f"device/params/{class_name}")
-    except Exception:
-        settings_path = settings.fileName()
-        logging.warning(
-            f"Settings file at {settings_path} is corrupted. Moving to recycle bin."
-        )
-        if not QFile.moveToTrash(settings_path):
-            logging.warning(
-                "Failed to move file to recycle bin. It will be overwritten."
-            )
-        return
-
+    params = get_setting(dict, f"device/params/{class_name}")
     if not params:
         return
 
