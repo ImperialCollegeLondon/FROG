@@ -129,6 +129,60 @@ def test_load_saved_parameter_values_error(
     warn_mock.assert_called_once()
 
 
+@pytest.mark.parametrize("param_name", ("param1", "param2"))
+@patch("frog.gui.hardware_set.device_view.QFile")
+@patch("frog.gui.hardware_set.device_view.settings")
+@patch("frog.gui.hardware_set.device_view.logging.warning")
+def test_load_saved_parameter_values_corrupted(
+    warning_mock: Mock,
+    settings_mock: Mock,
+    qfile_mock: Mock,
+    param_name: str,
+    widget: DeviceParametersWidget,
+    qtbot,
+) -> None:
+    """Test that a corrupted settings file is moved to the recycle bin."""
+    settings_mock.value.side_effect = Exception("corrupted")
+    settings_mock.fileName.return_value = "/path/to/settings.ini"
+    qfile_mock.moveToTrash.return_value = True
+
+    assert widget._param_widgets[param_name].value == 0
+    widget.load_saved_parameter_values()
+
+    # The file should have been moved to the recycle bin and a warning logged
+    qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")
+    warning_mock.assert_called_once()
+    # No parameter values should have been loaded
+    assert widget._param_widgets[param_name].value == 0
+
+
+@pytest.mark.parametrize("param_name", ("param1", "param2"))
+@patch("frog.gui.hardware_set.device_view.QFile")
+@patch("frog.gui.hardware_set.device_view.settings")
+@patch("frog.gui.hardware_set.device_view.logging.warning")
+def test_load_saved_parameter_values_corrupted_move_fails(
+    warning_mock: Mock,
+    settings_mock: Mock,
+    qfile_mock: Mock,
+    param_name: str,
+    widget: DeviceParametersWidget,
+    qtbot,
+) -> None:
+    """Test the fallback when a corrupted settings file cannot be moved to trash."""
+    settings_mock.value.side_effect = Exception("corrupted")
+    settings_mock.fileName.return_value = "/path/to/settings.ini"
+    qfile_mock.moveToTrash.return_value = False
+
+    assert widget._param_widgets[param_name].value == 0
+    widget.load_saved_parameter_values()
+
+    # An extra warning should be logged when the file can't be moved to the bin
+    qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")
+    assert warning_mock.call_count == 2
+    # No parameter values should have been loaded
+    assert widget._param_widgets[param_name].value == 0
+
+
 def test_current_parameter_values(widget: DeviceParametersWidget, qtbot) -> None:
     """Test the current_parameter_values property."""
     assert widget.current_parameter_values == {"param1": 0, "param2": 0}
