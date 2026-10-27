@@ -31,6 +31,9 @@ def _trash_corrupted_settings_file(error: Exception) -> None:
     if not QFile.moveToTrash(settings_path):
         logging.warning("Failed to move file to recycle bin. It will be overwritten.")
 
+    # Wipe settings (in memory and eventually on disk, when Qt next flushes it)
+    _settings.clear()
+
 
 def get_setting[T](type: type[T], name: str) -> T | None:
     """Get a value from the program settings.
