@@ -42,15 +42,15 @@ def test_init(
     sendmsg_mock.assert_called_once_with("data_file.close")
 
 
-@patch("frog.gui.data_file_view.settings")
+@patch("frog.gui.data_file_view.set_setting")
 def test_save_file_path_settings(
-    settings_mock: Mock, data_file: DataFileControl, qtbot
+    set_setting_mock: Mock, data_file: DataFileControl, qtbot
 ) -> None:
     """Test the _save_file_path_settings() method."""
     data_file._open_dir_widget.line_edit.setText("/some/path")
     data_file._filename_prefix_widget.setText("some_prefix")
     data_file._save_file_path_settings()
-    settings_mock.setValue.assert_has_calls(
+    set_setting_mock.assert_has_calls(
         (
             call("data/destination_dir", "/some/path"),
             call("data/filename_prefix", "some_prefix"),

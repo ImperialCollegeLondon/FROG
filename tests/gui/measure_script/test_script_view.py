@@ -214,10 +214,13 @@ def _run_script(script_control: ScriptControl) -> None:
     btn.click()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_recording_check_failed(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button does nothing if the data file recording check fails."""
     with patch.object(
@@ -230,13 +233,16 @@ def test_run_button_recording_check_failed(
         script_mock.try_load.assert_not_called()
 
         # Check that settings weren't updated
-        settings_mock.setValue.assert_not_called()
+        set_setting_mock.assert_not_called()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_no_file_path(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button does nothing if no path selected."""
     with patch.object(
@@ -253,13 +259,16 @@ def test_run_button_no_file_path(
             script_mock.try_load.assert_not_called()
 
             # Check that settings weren't updated
-            settings_mock.setValue.assert_not_called()
+            set_setting_mock.assert_not_called()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_bad_script(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button does nothing if script fails to load."""
     with patch.object(
@@ -270,13 +279,16 @@ def test_run_button_bad_script(
         _run_script(script_control)
 
         # Check that settings weren't updated
-        settings_mock.setValue.assert_not_called()
+        set_setting_mock.assert_not_called()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_success(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button works if no error occurs."""
     with patch.object(
@@ -294,7 +306,7 @@ def test_run_button_success(
             _run_script(script_control)
 
             # Check that settings were updated
-            settings_mock.setValue.assert_any_call("script/run_path", str(script_path))
+            set_setting_mock.assert_any_call("script/run_path", str(script_path))
 
             # Check that the script was started
             script.run.assert_called_once_with(script_control)

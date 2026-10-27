@@ -1,5 +1,7 @@
 """A module with a single settings object for the program settings."""
 
+from typing import Any
+
 from PySide6.QtCore import QSettings
 
 from frog.config import APP_CONFIG_PATH
@@ -63,3 +65,13 @@ def get_setting_or_default[T](name: str, default: T) -> T:
     if value is None:
         return default
     return _checked(value, type(default), name)
+
+
+def set_setting(name: str, value: Any) -> None:
+    """Store a value in the program settings.
+
+    Args:
+        name: The key under which to store the value.
+        value: The value to store. Any type supported by :class:`QSettings` is allowed.
+    """
+    settings.setValue(name, value)

@@ -18,7 +18,7 @@ from frog.gui.measure_script.script import Script, ScriptRunner
 from frog.gui.measure_script.script_edit_dialog import ScriptEditDialog
 from frog.gui.measure_script.script_run_dialog import ScriptRunDialog
 from frog.gui.path_widget import OpenFileWidget
-from frog.settings import get_setting_or_default, settings
+from frog.settings import get_setting_or_default, set_setting
 from frog.spectrometer_status import SpectrometerStatus
 
 
@@ -164,7 +164,7 @@ class ScriptControl(QGroupBox):
             return
 
         # Save to settings
-        settings.setValue("script/run_path", str(file_path))
+        set_setting("script/run_path", str(file_path))
 
         # Run the script!
         script.run(self)

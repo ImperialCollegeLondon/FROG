@@ -28,7 +28,7 @@ from frog.gui.hardware_set.hardware_set import (
     get_hardware_sets,
 )
 from frog.gui.hardware_set.hardware_sets_combo_box import HardwareSetsComboBox
-from frog.settings import get_setting, settings
+from frog.settings import get_setting, set_setting
 
 
 def _get_last_selected_hardware_set() -> HardwareSet | None:
@@ -257,7 +257,7 @@ class HardwareSetsControl(QGroupBox):
         path = self._combo.current_hardware_set.file_path  # type: ignore[union-attr]
 
         # Remember which hardware set was selected for next time we run the program
-        settings.setValue(
+        set_setting(
             "hardware_set/selected",
             str(path),
         )
@@ -287,8 +287,8 @@ class HardwareSetsControl(QGroupBox):
         dev_props = self._device_manager.devices[instance]
 
         # Remember last opened device
-        settings.setValue(f"device/type/{instance!s}", class_name)
+        set_setting(f"device/type/{instance!s}", class_name)
         if dev_props.args.params:
-            settings.setValue(f"device/params/{class_name}", dev_props.args.params)
+            set_setting(f"device/params/{class_name}", dev_props.args.params)
 
         self._update_control_state()
