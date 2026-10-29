@@ -1,7 +1,6 @@
 """Contains a panel for loading and editing measure scripts."""
 
 from pathlib import Path
-from typing import cast
 
 from pubsub import pub
 from PySide6.QtWidgets import (
@@ -19,12 +18,12 @@ from frog.gui.measure_script.script import Script, ScriptRunner
 from frog.gui.measure_script.script_edit_dialog import ScriptEditDialog
 from frog.gui.measure_script.script_run_dialog import ScriptRunDialog
 from frog.gui.path_widget import OpenFileWidget
-from frog.settings import settings
+from frog.settings import get_setting_or_default, set_setting
 from frog.spectrometer_status import SpectrometerStatus
 
 
 def _get_previous_script_path() -> Path | None:
-    path = cast(str, settings.value("script/run_path", ""))
+    path = get_setting_or_default("script/run_path", "")
     return Path(path) if path else None
 
 
@@ -165,7 +164,7 @@ class ScriptControl(QGroupBox):
             return
 
         # Save to settings
-        settings.setValue("script/run_path", str(file_path))
+        set_setting("script/run_path", str(file_path))
 
         # Run the script!
         script.run(self)

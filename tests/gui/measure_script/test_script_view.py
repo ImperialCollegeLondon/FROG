@@ -15,11 +15,12 @@ from frog.spectrometer_status import SpectrometerStatus
 
 
 @pytest.fixture
-@patch("frog.gui.measure_script.script_view.settings")
-def script_control(settings_mock: Mock, qtbot: QtBot) -> ScriptControl:
+@patch("frog.gui.measure_script.script_view.get_setting_or_default")
+def script_control(get_setting_or_default_mock: Mock, qtbot: QtBot) -> ScriptControl:
     """Provides a ScriptControl."""
-    # NB: This will need to be changed if we load more than one setting
-    settings_mock.value.return_value = "/my/path.yaml"
+    # Return a non-empty path so the widget's line edit is populated; otherwise
+    # try_get_path() would pop a (blocking) file dialog during the run-button tests.
+    get_setting_or_default_mock.return_value = "/my/path.yaml"
     return ScriptControl()
 
 
@@ -34,10 +35,12 @@ def click_button(widget: QWidget, text: str) -> None:
     get_button(widget, text).click()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
-def test_init(settings_mock: Mock, subscribe_mock: Mock, qtbot: QtBot) -> None:
+@patch("frog.gui.measure_script.script_view.get_setting_or_default")
+def test_init(
+    get_setting_or_default_mock: Mock, subscribe_mock: Mock, qtbot: QtBot
+) -> None:
     """Test ScriptControl's constructor."""
-    settings_mock.value.return_value = "/my/path.yaml"
+    get_setting_or_default_mock.return_value = "/my/path.yaml"
     script_control = ScriptControl()
     assert not script_control._spectrometer_ready
     assert not script_control._data_file_recording
@@ -62,15 +65,17 @@ def test_init(settings_mock: Mock, subscribe_mock: Mock, qtbot: QtBot) -> None:
     )
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.get_setting_or_default")
 @pytest.mark.parametrize("prev_path", (Path("/my/path.yaml"), ""))
-def test_init_path_setting(settings_mock: Mock, prev_path: Path, qtbot: QtBot) -> None:
+def test_init_path_setting(
+    get_setting_or_default_mock: Mock, prev_path: Path, qtbot: QtBot
+) -> None:
     """Check that the constructor correctly loads previous path from settings."""
-    settings_mock.value.return_value = str(prev_path)
+    get_setting_or_default_mock.return_value = str(prev_path)
     script_control = ScriptControl()
 
     # NB: This will need to be changed if we load more than one setting
-    settings_mock.value.assert_called_once_with("script/run_path", "")
+    get_setting_or_default_mock.assert_called_once_with("script/run_path", "")
 
     # Check that the initial path is correct
     assert script_control.script_path.line_edit.text() == str(prev_path)
@@ -210,10 +215,13 @@ def _run_script(script_control: ScriptControl) -> None:
     btn.click()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_recording_check_failed(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button does nothing if the data file recording check fails."""
     with patch.object(
@@ -226,13 +234,16 @@ def test_run_button_recording_check_failed(
         script_mock.try_load.assert_not_called()
 
         # Check that settings weren't updated
-        settings_mock.setValue.assert_not_called()
+        set_setting_mock.assert_not_called()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_no_file_path(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button does nothing if no path selected."""
     with patch.object(
@@ -249,13 +260,16 @@ def test_run_button_no_file_path(
             script_mock.try_load.assert_not_called()
 
             # Check that settings weren't updated
-            settings_mock.setValue.assert_not_called()
+            set_setting_mock.assert_not_called()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_bad_script(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button does nothing if script fails to load."""
     with patch.object(
@@ -266,13 +280,16 @@ def test_run_button_bad_script(
         _run_script(script_control)
 
         # Check that settings weren't updated
-        settings_mock.setValue.assert_not_called()
+        set_setting_mock.assert_not_called()
 
 
-@patch("frog.gui.measure_script.script_view.settings")
+@patch("frog.gui.measure_script.script_view.set_setting")
 @patch("frog.gui.measure_script.script_view.Script")
 def test_run_button_success(
-    script_mock: Mock, settings_mock: Mock, script_control: ScriptControl, qtbot: QtBot
+    script_mock: Mock,
+    set_setting_mock: Mock,
+    script_control: ScriptControl,
+    qtbot: QtBot,
 ) -> None:
     """Test that the run button works if no error occurs."""
     with patch.object(
@@ -290,7 +307,7 @@ def test_run_button_success(
             _run_script(script_control)
 
             # Check that settings were updated
-            settings_mock.setValue.assert_any_call("script/run_path", str(script_path))
+            set_setting_mock.assert_any_call("script/run_path", str(script_path))
 
             # Check that the script was started
             script.run.assert_called_once_with(script_control)

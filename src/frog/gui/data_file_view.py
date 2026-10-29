@@ -1,7 +1,6 @@
 """Provides a panel which lets the user start and stop recording of data files."""
 
 from pathlib import Path
-from typing import cast
 
 from pubsub import pub
 from PySide6.QtCore import Qt, Signal
@@ -21,16 +20,16 @@ from frog.config import DEFAULT_DATA_FILE_PATH
 from frog.gui.led_icon import LEDIcon
 from frog.gui.path_widget import OpenDirectoryWidget
 from frog.hardware.plugins.time import get_current_time
-from frog.settings import settings
+from frog.settings import get_setting_or_default, set_setting
 
 
 def _get_previous_destination_dir() -> Path:
-    path = cast(str, settings.value("data/destination_dir", ""))
+    path = get_setting_or_default("data/destination_dir", "")
     return Path(path) if path else DEFAULT_DATA_FILE_PATH
 
 
 def _get_previous_filename_prefix() -> str:
-    return cast(str, settings.value("data/filename_prefix", "data"))
+    return get_setting_or_default("data/filename_prefix", "data")
 
 
 class RecordingWidget(QWidget):
@@ -153,10 +152,8 @@ class DataFileControl(QGroupBox):
 
     def _save_file_path_settings(self) -> None:
         """Save the current destination dir and filename prefix to program settings."""
-        settings.setValue(
-            "data/destination_dir", self._open_dir_widget.line_edit.text()
-        )
-        settings.setValue("data/filename_prefix", self._filename_prefix_widget.text())
+        set_setting("data/destination_dir", self._open_dir_widget.line_edit.text())
+        set_setting("data/filename_prefix", self._filename_prefix_widget.text())
 
     def _on_file_close(self) -> None:
         self._open_dir_widget.setEnabled(True)

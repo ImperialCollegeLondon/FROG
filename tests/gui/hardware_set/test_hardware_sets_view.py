@@ -98,35 +98,43 @@ def test_init(
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_hardware_sets")
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
+@patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
 def test_get_last_selected_hardware_set_cached_success(
-    settings_mock: Mock, get_hw_sets_mock: Mock, hw_sets: Sequence[HardwareSet], qtbot
+    get_setting_mock: Mock,
+    get_hw_sets_mock: Mock,
+    hw_sets: Sequence[HardwareSet],
+    qtbot,
 ) -> None:
     """Test _get_last_selected_hardware_set() when there is a valid value cached."""
     get_hw_sets_mock.return_value = hw_sets[0:1]
-    settings_mock.value.return_value = str(hw_sets[0].file_path)
+    get_setting_mock.return_value = str(hw_sets[0].file_path)
     assert _get_last_selected_hardware_set() is hw_sets[0]
-    settings_mock.value.assert_called_once_with("hardware_set/selected")
+    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_hardware_sets")
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
+@patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
 def test_get_last_selected_hardware_set_cached_fail(
-    settings_mock: Mock, get_hw_sets_mock: Mock, hw_sets: Sequence[HardwareSet], qtbot
+    get_setting_mock: Mock,
+    get_hw_sets_mock: Mock,
+    hw_sets: Sequence[HardwareSet],
+    qtbot,
 ) -> None:
     """Test _get_last_selected_hardware_set() with an unknown path cached."""
     get_hw_sets_mock.return_value = hw_sets[0:1]
-    settings_mock.value.return_value = str(hw_sets[1].file_path)
+    get_setting_mock.return_value = str(hw_sets[1].file_path)
     assert _get_last_selected_hardware_set() is None
-    settings_mock.value.assert_called_once_with("hardware_set/selected")
+    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
 
 
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
-def test_get_last_selected_hardware_set_no_cached(settings_mock: Mock, qtbot) -> None:
+@patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
+def test_get_last_selected_hardware_set_no_cached(
+    get_setting_mock: Mock, qtbot
+) -> None:
     """Test _get_last_selected_hardware_set() when no value is cached."""
-    settings_mock.value.return_value = None
+    get_setting_mock.return_value = None
     assert _get_last_selected_hardware_set() is None
-    settings_mock.value.assert_called_once_with("hardware_set/selected")
+    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
 
 
 DEVICES = [
@@ -190,11 +198,11 @@ def test_update_control_state(
     "connected_devices,hardware_set,open_called",
     (((), range(2), range(2)), (range(2), range(2), ()), ((0,), range(2), (1,))),
 )
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
+@patch("frog.gui.hardware_set.hardware_sets_view.set_setting")
 @patch("frog.gui.hardware_set.device.open_device")
 def test_connect_btn(
     open_mock: Mock,
-    settings_mock: Mock,
+    set_setting_mock: Mock,
     connected_devices: Sequence[int],
     hardware_set: Sequence[int],
     open_called: Sequence[int],
@@ -217,7 +225,7 @@ def test_connect_btn(
             any_order=True,
         )
 
-        settings_mock.setValue.assert_called_once_with(
+        set_setting_mock.assert_called_once_with(
             "hardware_set/selected", str(file_path)
         )
 
@@ -243,8 +251,8 @@ def test_on_device_open_start(qtbot) -> None:
         update_mock.assert_called_once_with()
 
 
-@patch("frog.gui.hardware_set.hardware_sets_view.settings")
-def test_on_device_open_end(settings_mock: Mock, qtbot) -> None:
+@patch("frog.gui.hardware_set.hardware_sets_view.set_setting")
+def test_on_device_open_end(set_setting_mock: Mock, qtbot) -> None:
     """Test the _on_device_open_end() method."""
     device = DEVICES[0]
     active_devices = {
@@ -255,7 +263,7 @@ def test_on_device_open_end(settings_mock: Mock, qtbot) -> None:
         hw_control._on_device_open_end(
             instance=device.instance, class_name=device.class_name
         )
-        settings_mock.setValue.assert_has_calls(
+        set_setting_mock.assert_has_calls(
             [
                 call(f"device/type/{device.instance!s}", device.class_name),
                 call(f"device/params/{device.class_name}", device.params),

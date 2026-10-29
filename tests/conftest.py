@@ -5,6 +5,24 @@ from unittest.mock import MagicMock
 
 import pytest
 from pubsub import pub
+from PySide6.QtCore import QSettings
+
+
+@pytest.fixture(autouse=True)
+def isolate_settings(monkeypatch, tmp_path) -> None:
+    """Redirect the global settings object to a temporary file.
+
+    This prevents tests from inadvertently reading from or writing to the real
+    settings file on the developer's machine via ``get_setting``,
+    ``get_setting_or_default`` or ``set_setting``.
+    """
+    import frog.settings
+
+    monkeypatch.setattr(
+        frog.settings,
+        "_settings",
+        QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat),
+    )
 
 
 @pytest.fixture
@@ -47,3 +65,9 @@ def sendmsg_mock(monkeypatch) -> MagicMock:
 
 # Don't actually raise windows etc.
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
+# Stop Qt from loading a native platform theme (e.g. GTK3). On headless machines
+# where GTK is installed (such as sandboxed CI/agent environments), the GTK theme
+# calls gtk_init(), which aborts the process when it cannot open an X display,
+# even though we are using the offscreen platform. Disabling the theme avoids this.
+os.environ["QT_QPA_PLATFORMTHEME"] = ""
