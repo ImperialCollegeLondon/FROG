@@ -20,16 +20,16 @@ from frog.config import DEFAULT_DATA_FILE_PATH
 from frog.gui.led_icon import LEDIcon
 from frog.gui.path_widget import OpenDirectoryWidget
 from frog.hardware.plugins.time import get_current_time
-from frog.settings import get_setting_or_default, set_setting
+from frog.settings import get_setting, set_setting
 
 
 def _get_previous_destination_dir() -> Path:
-    path = get_setting_or_default("data/destination_dir", "")
+    path = get_setting("data/destination_dir", str)
     return Path(path) if path else DEFAULT_DATA_FILE_PATH
 
 
 def _get_previous_filename_prefix() -> str:
-    return get_setting_or_default("data/filename_prefix", "data")
+    return get_setting("data/filename_prefix", default="data")
 
 
 class RecordingWidget(QWidget):

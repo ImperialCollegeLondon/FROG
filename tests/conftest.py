@@ -13,8 +13,7 @@ def isolate_settings(monkeypatch, tmp_path) -> None:
     """Redirect the global settings object to a temporary file.
 
     This prevents tests from inadvertently reading from or writing to the real
-    settings file on the developer's machine via ``get_setting``,
-    ``get_setting_or_default`` or ``set_setting``.
+    settings file on the developer's machine via ``get_setting`` or ``set_setting``.
     """
     import frog.settings
 

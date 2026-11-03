@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 from PySide6.QtCore import QSettings
 
-from frog.settings import get_setting, get_setting_or_default, set_setting
+from frog.settings import get_setting, set_setting
 
 
 @pytest.fixture
@@ -43,21 +43,21 @@ def test_get_setting_wrong_type(
     warning_mock.assert_called_once()
 
 
-def test_get_setting_or_default_present(temp_settings: QSettings) -> None:
-    """Test get_setting_or_default() returns a stored value if present."""
+def test_get_setting_default_present(temp_settings: QSettings) -> None:
+    """Test get_setting() returns a stored value if present."""
     temp_settings.setValue("key", "hello")
-    assert get_setting_or_default("key", "default") == "hello"
+    assert get_setting("key", default="default") == "hello"
 
 
-def test_get_setting_or_default_absent(temp_settings: QSettings) -> None:
-    """Test get_setting_or_default() returns the default when absent."""
-    assert get_setting_or_default("missing", "default") == "default"
+def test_get_setting_default_absent(temp_settings: QSettings) -> None:
+    """Test get_setting() returns the default when absent."""
+    assert get_setting("missing", default="default") == "default"
 
 
 @patch("frog.settings.QFile")
 @patch("frog.settings._settings")
 @patch("frog.settings.logging.warning")
-def test_get_setting_or_default_wrong_type(
+def test_get_setting_default_wrong_type(
     warning_mock: Mock, settings_mock: Mock, qfile_mock: Mock
 ) -> None:
     """Test a value whose type differs from the default is treated as corruption."""
@@ -65,7 +65,7 @@ def test_get_setting_or_default_wrong_type(
     settings_mock.fileName.return_value = "/path/to/settings.ini"
     qfile_mock.moveToTrash.return_value = True
 
-    assert get_setting_or_default("key", 5) == 5
+    assert get_setting("key", default=5) == 5
     qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")
     warning_mock.assert_called_once()
 
@@ -116,14 +116,33 @@ def test_get_setting_corrupted_move_fails(
 @patch("frog.settings.QFile")
 @patch("frog.settings._settings")
 @patch("frog.settings.logging.warning")
-def test_get_setting_or_default_corrupted(
+def test_get_setting_default_corrupted(
     warning_mock: Mock, settings_mock: Mock, qfile_mock: Mock
 ) -> None:
-    """Test get_setting_or_default() returns the default if the file is corrupted."""
+    """Test get_setting() returns the default if the file is corrupted."""
     settings_mock.value.side_effect = Exception("corrupted")
     settings_mock.fileName.return_value = "/path/to/settings.ini"
     qfile_mock.moveToTrash.return_value = True
 
-    assert get_setting_or_default("key", "default") == "default"
+    assert get_setting("key", default="default") == "default"
     qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")
     warning_mock.assert_called_once()
+
+
+def test_get_setting_default_and_type(temp_settings: QSettings) -> None:
+    """Test get_setting() with both type and default."""
+    assert get_setting("missing", str, "default") == "default"
+    temp_settings.setValue("key", "hello")
+    assert get_setting("key", str, "default") == "hello"
+
+
+def test_get_setting_no_type_or_default() -> None:
+    """Test get_setting() requires at least one of type and default."""
+    with pytest.raises(TypeError):
+        get_setting("key")
+
+
+def test_get_setting_default_type_mismatch() -> None:
+    """Test get_setting() rejects a default that does not match type."""
+    with pytest.raises(TypeError):
+        get_setting("key", str, 5)

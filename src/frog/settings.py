@@ -35,25 +35,44 @@ def _trash_corrupted_settings_file(error: Exception) -> None:
     _settings.clear()
 
 
-def get_setting[T](name: str, type: type[T]) -> T | None:
+def get_setting(name: str, type: type | None = None, default: Any = None) -> Any:
     """Get a value from the program settings.
 
-    A stored value whose type does not match ``type`` is treated as a corrupted
-    settings file: the file is moved to the recycle bin and ``None`` is returned.
+    Either the `type` parameter or `default` parameter must be given (or both).
+
+    A stored value whose type does not match the expected type is treated as a
+    corrupted settings file: the file is moved to the recycle bin and ``default`` (or
+    ``None`` if not given) is returned.
 
     Args:
         name: The key under which the value is stored.
-        type: The type the stored value is expected to have.
+        type: The type the stored value is expected to have. If omitted, the type of
+            ``default`` is used.
+        default: The value to return if the key is not present.
 
     Returns:
-        The stored value, or ``None`` if the key is not present (or the file was
+        The stored value, or ``default`` if the key is not present (or the file was
         corrupted).
+
+    Raises:
+        TypeError: If neither ``type`` nor ``default`` is given, or ``default`` is not
+            an instance of ``type``.
     """
+    if type is None:
+        if default is None:
+            raise TypeError("At least one of type and default must be given")
+        type = default.__class__
+    elif default is not None and not isinstance(default, type):
+        raise TypeError(
+            f"Default value has type {default.__class__.__name__}, "
+            f"expected {type.__name__}"
+        )
+
     try:
         value = _settings.value(name)
         if value is None:
             # Setting not present
-            return None
+            return default
 
         if not isinstance(value, type):
             # Setting present, but of wrong type; something's gone wrong
@@ -65,26 +84,7 @@ def get_setting[T](name: str, type: type[T]) -> T | None:
         return value
     except Exception as error:
         _trash_corrupted_settings_file(error)
-        return None
-
-
-def get_setting_or_default[T](name: str, default: T) -> T:
-    """Get a value from the program settings, falling back to a default.
-
-    The stored value, if present, is checked against the type of ``default``. A value
-    of the wrong type is treated as a corrupted settings file: the file is moved to
-    the recycle bin and ``default`` is returned.
-
-    Args:
-        name: The key under which the value is stored.
-        default: The value to return if the key is not present.
-
-    Returns:
-        The stored value, or ``default`` if the key is not present (or the file was
-        corrupted).
-    """
-    value = get_setting(name, type(default))
-    return default if value is None else value
+        return default
 
 
 def set_setting(name: str, value: Any) -> None:
