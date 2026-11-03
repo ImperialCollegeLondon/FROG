@@ -10,6 +10,7 @@ from frog.gui.hardware_set.device_view import (
     ComboParameterWidget,
     DeviceParametersWidget,
     TextParameterWidget,
+    load_saved_parameter_values,
 )
 
 
@@ -59,6 +60,40 @@ def test_text_parameter_widget(qtbot) -> None:
         widget.value
 
 
+@pytest.mark.parametrize("param_name", ("param1", "param2"))
+@patch("frog.gui.hardware_set.device_view.get_setting")
+def test_load_saved_parameter_values(get_setting_mock: Mock, param_name: str) -> None:
+    """Test the load_saved_parameter_values() function."""
+    param_widgets = {"param1": Mock(value=0), "param2": Mock(value=0)}
+    get_setting_mock.return_value = {param_name: 1}
+    load_saved_parameter_values("my_class", param_widgets)
+    get_setting_mock.assert_called_once_with(dict, "device/params/my_class")
+    assert param_widgets[param_name].value == 1
+    for name, widget in param_widgets.items():
+        if name != param_name:
+            assert widget.value == 0
+
+
+@patch("frog.gui.hardware_set.device_view.get_setting")
+def test_load_saved_parameter_values_none_saved(get_setting_mock: Mock) -> None:
+    """Test load_saved_parameter_values() if there are no values saved."""
+    param_widgets = {"param1": Mock(value=0)}
+    get_setting_mock.return_value = None
+    load_saved_parameter_values("my_class", param_widgets)
+    assert param_widgets["param1"].value == 0
+
+
+@patch("frog.gui.hardware_set.device_view.get_setting")
+@patch("frog.gui.hardware_set.device_view.logging.warn")
+def test_load_saved_parameter_values_error(
+    warn_mock: Mock, get_setting_mock: Mock
+) -> None:
+    """Test load_saved_parameter_values() ignores errors."""
+    get_setting_mock.return_value = {"made_up": 1}
+    load_saved_parameter_values("my_class", {"param1": Mock(value=0)})
+    warn_mock.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "params",
     (
@@ -89,44 +124,6 @@ def test_init(params: Mapping[str, DeviceParameter], qtbot) -> None:
         param_widget = widget._param_widgets[name]
         if param.default_value:
             assert param_widget.value == param.default_value
-
-
-@pytest.mark.parametrize("param_name", ("param1", "param2"))
-@patch("frog.gui.hardware_set.device_view.get_setting")
-def test_load_saved_parameter_values(
-    get_setting_mock: Mock, param_name: str, widget: DeviceParametersWidget, qtbot
-) -> None:
-    """Test the load_saved_parameter_values() method."""
-    get_setting_mock.return_value = {param_name: 1}
-    assert widget._param_widgets[param_name].value == 0
-    widget.load_saved_parameter_values()
-    assert widget._param_widgets[param_name].value == 1
-
-
-@pytest.mark.parametrize("param_name", ("param1", "param2"))
-@patch("frog.gui.hardware_set.device_view.get_setting")
-def test_load_saved_parameter_values_none_saved(
-    get_setting_mock: Mock, param_name: str, widget: DeviceParametersWidget, qtbot
-) -> None:
-    """Test the load_saved_parameter_values() method if there are no values saved."""
-    get_setting_mock.return_value = None
-    assert widget._param_widgets[param_name].value == 0
-    widget.load_saved_parameter_values()
-    assert widget._param_widgets[param_name].value == 0
-
-
-@patch("frog.gui.hardware_set.device_view.get_setting")
-@patch("frog.gui.hardware_set.device_view.logging.warn")
-def test_load_saved_parameter_values_error(
-    warn_mock: Mock,
-    get_setting_mock: Mock,
-    widget: DeviceParametersWidget,
-    qtbot,
-) -> None:
-    """Test the load_saved_parameter_values() method ignores errors."""
-    get_setting_mock.return_value = {"made_up": 1}
-    widget.load_saved_parameter_values()
-    warn_mock.assert_called_once()
 
 
 def test_current_parameter_values(widget: DeviceParametersWidget, qtbot) -> None:
