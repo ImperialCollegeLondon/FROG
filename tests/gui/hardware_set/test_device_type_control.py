@@ -21,9 +21,12 @@ DEVICE_TYPES = [
 @pytest.fixture
 def widget(subscribe_mock: MagicMock, qtbot) -> DeviceTypeControl:
     """Create a DeviceTypeControl fixture."""
-    return DeviceTypeControl(
-        "Device type", DeviceInstanceRef("base_type"), DEVICE_TYPES
-    )
+    # Patch only while the control is constructed, so setup doesn't load real saved
+    # parameter values.
+    with patch("frog.gui.hardware_set.device_view.load_saved_parameter_values"):
+        return DeviceTypeControl(
+            "Device type", DeviceInstanceRef("base_type"), DEVICE_TYPES
+        )
 
 
 @pytest.mark.parametrize(
@@ -48,9 +51,9 @@ def widget(subscribe_mock: MagicMock, qtbot) -> DeviceTypeControl:
 @patch(
     "frog.gui.hardware_set.device_view.DeviceTypeControl._update_open_btn_enabled_state"
 )
-@patch("frog.gui.hardware_set.device_view.settings")
+@patch("frog.gui.hardware_set.device_view.get_setting")
 def test_init(
-    settings_mock: Mock,
+    get_setting_mock: Mock,
     update_btn_mock: Mock,
     load_saved_mock: Mock,
     active_device: DeviceTypeInfo | None,
@@ -63,7 +66,7 @@ def test_init(
     """Test the constructor."""
     instance = DeviceInstanceRef("base_type")
 
-    settings_mock.value.return_value = (
+    get_setting_mock.return_value = (
         previous_device.class_name if previous_device else None
     )
     widget = DeviceTypeControl(
