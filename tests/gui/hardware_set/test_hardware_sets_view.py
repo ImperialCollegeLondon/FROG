@@ -109,7 +109,7 @@ def test_get_last_selected_hardware_set_cached_success(
     get_hw_sets_mock.return_value = hw_sets[0:1]
     get_setting_mock.return_value = str(hw_sets[0].file_path)
     assert _get_last_selected_hardware_set() is hw_sets[0]
-    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
+    get_setting_mock.assert_called_once_with("hardware_set/selected", str)
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_hardware_sets")
@@ -124,7 +124,7 @@ def test_get_last_selected_hardware_set_cached_fail(
     get_hw_sets_mock.return_value = hw_sets[0:1]
     get_setting_mock.return_value = str(hw_sets[1].file_path)
     assert _get_last_selected_hardware_set() is None
-    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
+    get_setting_mock.assert_called_once_with("hardware_set/selected", str)
 
 
 @patch("frog.gui.hardware_set.hardware_sets_view.get_setting")
@@ -134,7 +134,7 @@ def test_get_last_selected_hardware_set_no_cached(
     """Test _get_last_selected_hardware_set() when no value is cached."""
     get_setting_mock.return_value = None
     assert _get_last_selected_hardware_set() is None
-    get_setting_mock.assert_called_once_with(str, "hardware_set/selected")
+    get_setting_mock.assert_called_once_with("hardware_set/selected", str)
 
 
 DEVICES = [

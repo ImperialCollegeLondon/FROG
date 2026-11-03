@@ -99,7 +99,7 @@ def load_saved_parameter_values(
         class_name: The device type's class name, used to look up saved values
         param_widgets: A mapping of parameter names to their widgets
     """
-    params = get_setting(dict, f"device/params/{class_name}")
+    params = get_setting(f"device/params/{class_name}", dict)
     if not params:
         return
 
@@ -215,7 +215,7 @@ class DeviceTypeControl(QGroupBox):
             self._device_widgets.append(widget)
 
         # Select the last device that was successfully opened, if there is one
-        previous_device = get_setting(str, f"device/type/{instance!s}")
+        previous_device = get_setting(f"device/type/{instance!s}", str)
         if previous_device:
             self._select_device(previous_device)
 

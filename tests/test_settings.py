@@ -19,12 +19,12 @@ def temp_settings(tmp_path):
 def test_get_setting_present(temp_settings: QSettings) -> None:
     """Test get_setting() returns a stored value of the expected type."""
     temp_settings.setValue("key", "hello")
-    assert get_setting(str, "key") == "hello"
+    assert get_setting("key", str) == "hello"
 
 
 def test_get_setting_absent(temp_settings: QSettings) -> None:
     """Test get_setting() returns None when the key is not present."""
-    assert get_setting(str, "missing") is None
+    assert get_setting("missing", str) is None
 
 
 @patch("frog.settings.QFile")
@@ -38,7 +38,7 @@ def test_get_setting_wrong_type(
     settings_mock.fileName.return_value = "/path/to/settings.ini"
     qfile_mock.moveToTrash.return_value = True
 
-    assert get_setting(int, "key") is None
+    assert get_setting("key", int) is None
     qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")
     warning_mock.assert_called_once()
 
@@ -88,7 +88,7 @@ def test_get_setting_corrupted(
     qfile_mock.moveToTrash.return_value = True
 
     # The setting is treated as absent
-    assert get_setting(dict, "device/params/foo") is None
+    assert get_setting("device/params/foo", dict) is None
 
     # The file should have been moved to the recycle bin and a warning logged
     qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")
@@ -106,7 +106,7 @@ def test_get_setting_corrupted_move_fails(
     settings_mock.fileName.return_value = "/path/to/settings.ini"
     qfile_mock.moveToTrash.return_value = False
 
-    assert get_setting(dict, "device/params/foo") is None
+    assert get_setting("device/params/foo", dict) is None
 
     # An extra warning should be logged when the file can't be moved to the bin
     qfile_mock.moveToTrash.assert_called_once_with("/path/to/settings.ini")

@@ -32,7 +32,7 @@ from frog.settings import get_setting, set_setting
 
 
 def _get_last_selected_hardware_set() -> HardwareSet | None:
-    last_selected_path = get_setting(str, "hardware_set/selected")
+    last_selected_path = get_setting("hardware_set/selected", str)
     if not last_selected_path:
         return None
 

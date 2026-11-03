@@ -67,7 +67,7 @@ def test_load_saved_parameter_values(get_setting_mock: Mock, param_name: str) ->
     param_widgets = {"param1": Mock(value=0), "param2": Mock(value=0)}
     get_setting_mock.return_value = {param_name: 1}
     load_saved_parameter_values("my_class", param_widgets)
-    get_setting_mock.assert_called_once_with(dict, "device/params/my_class")
+    get_setting_mock.assert_called_once_with("device/params/my_class", dict)
     assert param_widgets[param_name].value == 1
     for name, widget in param_widgets.items():
         if name != param_name:

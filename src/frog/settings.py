@@ -35,15 +35,15 @@ def _trash_corrupted_settings_file(error: Exception) -> None:
     _settings.clear()
 
 
-def get_setting[T](type: type[T], name: str) -> T | None:
+def get_setting[T](name: str, type: type[T]) -> T | None:
     """Get a value from the program settings.
 
     A stored value whose type does not match ``type`` is treated as a corrupted
     settings file: the file is moved to the recycle bin and ``None`` is returned.
 
     Args:
-        type: The type the stored value is expected to have.
         name: The key under which the value is stored.
+        type: The type the stored value is expected to have.
 
     Returns:
         The stored value, or ``None`` if the key is not present (or the file was
@@ -83,7 +83,7 @@ def get_setting_or_default[T](name: str, default: T) -> T:
         The stored value, or ``default`` if the key is not present (or the file was
         corrupted).
     """
-    value = get_setting(type(default), name)
+    value = get_setting(name, type(default))
     return default if value is None else value
 
 
